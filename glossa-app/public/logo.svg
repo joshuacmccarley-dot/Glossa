@@ -1,0 +1,235 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 480" width="420" height="480">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#f8f4e8" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD966"/>
+      <stop offset="50%" stop-color="#F5A623"/>
+      <stop offset="100%" stop-color="#C97D0A"/>
+    </linearGradient>
+    <linearGradient id="plumeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2A6B"/>
+      <stop offset="50%" stop-color="#E8541A"/>
+      <stop offset="100%" stop-color="#F5A623"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8541A"/>
+      <stop offset="60%" stop-color="#C0392B"/>
+      <stop offset="100%" stop-color="#8B1A0A"/>
+    </linearGradient>
+    <linearGradient id="quillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2A6B"/>
+      <stop offset="30%" stop-color="#3B5BDB"/>
+      <stop offset="60%" stop-color="#F5A623"/>
+      <stop offset="100%" stop-color="#E8541A"/>
+    </linearGradient>
+    <linearGradient id="swordGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8f0ff"/>
+      <stop offset="50%" stop-color="#c8d8ff"/>
+      <stop offset="100%" stop-color="#3B5BDB"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#00000025"/>
+    </filter>
+  </defs>
+
+  <!-- Outer decorative ring - gold -->
+  <circle cx="210" cy="195" r="168" fill="none" stroke="#F5A623" stroke-width="3" opacity="0.4"/>
+
+  <!-- Greek key meander border - top arc segments -->
+  <!-- Simulated with dashed pattern + small key shapes -->
+  <circle cx="210" cy="195" r="160" fill="url(#bgGlow)" stroke="none"/>
+
+  <!-- Greek key pattern: small rectangular meander segments around the circle -->
+  <!-- Top-left arc -->
+  <g stroke="#F5A623" stroke-width="2.5" fill="none" opacity="0.85">
+    <!-- Meander segments placed around the border at key positions -->
+    <!-- Top region -->
+    <polyline points="130,55 130,45 140,45 140,35 160,35 160,45 170,45 170,55"/>
+    <polyline points="180,38 180,28 190,28 190,38"/>
+    <!-- Top right -->
+    <polyline points="245,38 245,28 255,28 255,38"/>
+    <polyline points="250,55 250,45 260,45 260,35 280,35 280,45 290,45 290,55"/>
+    <!-- Right region -->
+    <polyline points="348,130 358,130 358,140 368,140 368,160 358,160 358,170 348,170"/>
+    <polyline points="362,180 372,180 372,190 362,190"/>
+    <!-- Bottom right -->
+    <polyline points="348,245 358,245 358,255 368,255 368,275 358,275 358,285 348,285"/>
+    <!-- Left region -->
+    <polyline points="72,130 62,130 62,140 52,140 52,160 62,160 62,170 72,170"/>
+    <polyline points="58,180 48,180 48,190 58,190"/>
+    <!-- Bottom left -->
+    <polyline points="72,245 62,245 62,255 52,255 52,275 62,275 62,285 72,285"/>
+  </g>
+
+  <!-- Gold sparkle stars scattered around -->
+  <!-- 4-pointed star helper: drawn as two rotated rectangles -->
+  <g fill="#F5A623" opacity="0.9">
+    <!-- Star top-left area -->
+    <polygon points="145,90 147,96 153,96 148,100 150,106 145,102 140,106 142,100 137,96 143,96" transform="scale(0.7) translate(63,40)"/>
+    <!-- Star top-right -->
+    <polygon points="275,85 277,91 283,91 278,95 280,101 275,97 270,101 272,95 267,91 273,91" transform="scale(0.65) translate(145,35)"/>
+    <!-- Star right -->
+    <polygon points="340,180 342,186 348,186 343,190 345,196 340,192 335,196 337,190 332,186 338,186" transform="scale(0.6) translate(225,115)"/>
+    <!-- Small dots/sparks -->
+    <circle cx="155" cy="100" r="3"/>
+    <circle cx="272" cy="92" r="2.5"/>
+    <circle cx="330" cy="175" r="2"/>
+    <circle cx="180" cy="72" r="2"/>
+    <circle cx="248" cy="70" r="3"/>
+    <circle cx="318" cy="220" r="2"/>
+  </g>
+  <!-- Purple sparkle -->
+  <g fill="#8B5CF6" opacity="0.8">
+    <circle cx="160" cy="165" r="2.5"/>
+    <circle cx="268" cy="155" r="3"/>
+    <circle cx="155" cy="230" r="2"/>
+  </g>
+
+  <!-- === SPEECH BUBBLE - left (chat lines) === -->
+  <g filter="url(#softShadow)">
+    <rect x="108" y="130" width="62" height="48" rx="14" ry="14" fill="#4A9EF5" opacity="0.95"/>
+    <polygon points="130,178 122,196 145,178" fill="#4A9EF5" opacity="0.95"/>
+    <!-- Lines inside bubble -->
+    <line x1="120" y1="147" x2="158" y2="147" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="120" y1="158" x2="155" y2="158" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="120" y1="169" x2="148" y2="169" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- === SPEECH BUBBLE - top-left (letter A) === -->
+  <g filter="url(#softShadow)">
+    <rect x="128" y="90" width="50" height="44" rx="13" ry="13" fill="#34C95A" opacity="0.95"/>
+    <polygon points="148,134 140,150 162,134" fill="#34C95A" opacity="0.95"/>
+    <text x="153" y="120" font-family="Arial Black, sans-serif" font-weight="900" font-size="22" fill="white" text-anchor="middle">A</text>
+  </g>
+
+  <!-- === LIGHT BULB - right === -->
+  <g filter="url(#softShadow)">
+    <circle cx="294" cy="148" r="24" fill="#FFD700" opacity="0.95"/>
+    <!-- Bulb base lines -->
+    <rect x="286" y="168" width="16" height="4" rx="2" fill="#F5A623"/>
+    <rect x="287" y="174" width="14" height="4" rx="2" fill="#F5A623"/>
+    <!-- Bulb filament simplified -->
+    <path d="M 287 158 Q 294 145 301 158" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- === SPARTAN WARRIOR === -->
+
+  <!-- Cape / cloak (behind body) - deep red-orange -->
+  <ellipse cx="210" cy="255" rx="68" ry="95" fill="#C0392B" opacity="0.9"/>
+  <ellipse cx="210" cy="250" rx="55" ry="80" fill="#E8541A" opacity="0.85"/>
+
+  <!-- Body armor - golden -->
+  <ellipse cx="210" cy="265" rx="50" ry="65" fill="url(#helmetGrad)" filter="url(#softShadow)"/>
+  <!-- Armor chest plate detail -->
+  <ellipse cx="210" cy="260" rx="35" ry="45" fill="#F5A623" opacity="0.7"/>
+  <!-- Armor center boss -->
+  <circle cx="210" cy="255" r="12" fill="#FFD966" stroke="#C97D0A" stroke-width="2"/>
+  <!-- Armor shoulder pads -->
+  <ellipse cx="175" cy="240" rx="22" ry="15" fill="url(#helmetGrad)" transform="rotate(-15,175,240)"/>
+  <ellipse cx="245" cy="240" rx="22" ry="15" fill="url(#helmetGrad)" transform="rotate(15,245,240)"/>
+
+  <!-- === HELMET === -->
+  <!-- Helmet dome -->
+  <ellipse cx="210" cy="170" rx="52" ry="58" fill="url(#helmetGrad)" filter="url(#softShadow)"/>
+  <!-- Helmet face guard / nasal -->
+  <rect x="203" y="158" width="14" height="38" rx="5" fill="#C97D0A" opacity="0.9"/>
+  <!-- Helmet cheek guards -->
+  <ellipse cx="175" cy="195" rx="18" ry="28" fill="url(#helmetGrad)" transform="rotate(-10,175,195)"/>
+  <ellipse cx="245" cy="195" rx="18" ry="28" fill="url(#helmetGrad)" transform="rotate(10,245,195)"/>
+  <!-- Helmet eye slit -->
+  <rect x="178" y="172" width="22" height="7" rx="3.5" fill="#1B2A6B" opacity="0.85"/>
+  <rect x="220" y="172" width="22" height="7" rx="3.5" fill="#1B2A6B" opacity="0.85"/>
+  <!-- Helmet brow ridge -->
+  <rect x="172" y="166" width="76" height="8" rx="4" fill="#C97D0A" opacity="0.7"/>
+  <!-- Gold chin strap detail -->
+  <path d="M 175 205 Q 210 220 245 205" fill="none" stroke="#FFD966" stroke-width="3" stroke-linecap="round"/>
+  <!-- Helmet top ridge -->
+  <ellipse cx="210" cy="130" rx="10" ry="14" fill="#C97D0A"/>
+
+  <!-- === HELMET PLUME === -->
+  <!-- Main plume - layered color strips radiating up -->
+  <g opacity="0.95">
+    <ellipse cx="210" cy="100" rx="42" ry="55" fill="#1B2A6B" transform="rotate(-8,210,100)"/>
+    <ellipse cx="215" cy="95" rx="36" ry="52" fill="#E8541A" transform="rotate(-3,215,95)"/>
+    <ellipse cx="218" cy="92" rx="28" ry="48" fill="#F5A623" transform="rotate(3,218,92)"/>
+    <ellipse cx="220" cy="90" rx="18" ry="42" fill="#FFD966" transform="rotate(5,220,90)"/>
+    <!-- Blue accent on plume left -->
+    <ellipse cx="200" cy="98" rx="12" ry="40" fill="#3B5BDB" opacity="0.8" transform="rotate(-12,200,98)"/>
+  </g>
+
+  <!-- === SWORD (left hand, angled) === -->
+  <g filter="url(#softShadow)" transform="rotate(-35, 175, 260)">
+    <!-- Blade -->
+    <polygon points="160,195 165,195 175,320 170,320" fill="url(#swordGrad)"/>
+    <!-- Crossguard -->
+    <rect x="148" y="193" width="30" height="8" rx="3" fill="url(#helmetGrad)"/>
+    <!-- Handle -->
+    <rect x="155" y="201" width="16" height="30" rx="4" fill="#C97D0A"/>
+    <!-- Pommel -->
+    <ellipse cx="163" cy="234" rx="10" ry="8" fill="url(#helmetGrad)"/>
+    <!-- Blade edge shine -->
+    <line x1="162" y1="197" x2="172" y2="318" stroke="white" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- === SHIELD === -->
+  <g filter="url(#softShadow)" transform="rotate(12, 248, 275)">
+    <!-- Shield body - round -->
+    <ellipse cx="248" cy="275" rx="42" ry="46" fill="url(#shieldGrad)"/>
+    <!-- Shield gold rim -->
+    <ellipse cx="248" cy="275" rx="42" ry="46" fill="none" stroke="url(#helmetGrad)" stroke-width="5"/>
+    <!-- Shield gold center boss -->
+    <circle cx="248" cy="272" r="14" fill="url(#helmetGrad)"/>
+    <circle cx="248" cy="272" r="8" fill="#FFD966"/>
+    <!-- Chevron/lambda on shield (Spartan lambda Λ) -->
+    <polyline points="232,288 248,258 264,288" fill="none" stroke="#FFD966" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- Sparkle on shield -->
+    <polygon points="263,260 265,266 271,266 266,270 268,276 263,272 258,276 260,270 255,266 261,266" fill="#FFD966" transform="scale(0.7) translate(119,105)"/>
+  </g>
+
+  <!-- === DECORATIVE FEATHER QUILL (bottom) === -->
+  <g transform="rotate(-25, 200, 330)" opacity="0.9">
+    <!-- Quill shaft -->
+    <line x1="155" y1="360" x2="265" y2="295" stroke="url(#quillGrad)" stroke-width="3" stroke-linecap="round"/>
+    <!-- Quill vanes left -->
+    <path d="M 160 358 Q 145 330 165 310 Q 175 330 175 345 Z" fill="#3B5BDB" opacity="0.8"/>
+    <path d="M 175 345 Q 158 320 178 298 Q 188 318 187 333 Z" fill="#4A9EF5" opacity="0.75"/>
+    <path d="M 188 333 Q 170 308 192 286 Q 200 306 200 320 Z" fill="#F5A623" opacity="0.8"/>
+    <path d="M 200 320 Q 183 297 205 275 Q 212 295 212 310 Z" fill="#E8541A" opacity="0.75"/>
+    <!-- Quill vanes right -->
+    <path d="M 165 352 Q 185 335 178 312 Q 168 330 162 345 Z" fill="#1B2A6B" opacity="0.7"/>
+    <path d="M 178 340 Q 198 323 191 300 Q 181 318 175 332 Z" fill="#3B5BDB" opacity="0.65"/>
+  </g>
+
+  <!-- Helmet/armor gold meander band across chest -->
+  <g stroke="#F5A623" stroke-width="2" fill="none" opacity="0.7">
+    <polyline points="172,305 172,298 179,298 179,291 186,291 186,298 193,298 193,305"/>
+    <polyline points="196,305 196,298 203,298 203,291 210,291 210,298 217,298 217,305"/>
+    <polyline points="220,305 220,298 227,298 227,291 234,291 234,298 241,298 241,305"/>
+  </g>
+
+  <!-- === TEXT === -->
+  <!-- "Glossa" - bold navy -->
+  <text
+    x="210" y="390"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900"
+    font-size="62"
+    fill="#1B2A6B"
+    text-anchor="middle"
+    letter-spacing="-1"
+  >Glossa</text>
+
+  <!-- "In-Depth Language Learning" - orange subtitle -->
+  <text
+    x="210" y="422"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="18"
+    fill="#E8541A"
+    text-anchor="middle"
+    letter-spacing="0.5"
+  >In-Depth Language Learning</text>
+</svg>

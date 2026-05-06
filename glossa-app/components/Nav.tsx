@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const links = [
   { href: "/learn", label: "Learn" },
@@ -17,14 +18,15 @@ export default function Nav() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-surface-dark shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center">
-              <span className="text-gold font-display font-bold text-sm">G</span>
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-display font-bold text-navy text-lg">Glossa</span>
-              <span className="text-gold text-[10px] font-semibold tracking-wide uppercase">In-Depth Language Learning</span>
-            </div>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo.svg"
+              alt="Glossa — In-Depth Language Learning"
+              width={120}
+              height={48}
+              priority
+              className="h-12 w-auto"
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

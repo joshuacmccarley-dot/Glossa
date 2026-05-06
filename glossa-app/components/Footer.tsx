@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = {
   Product: [
@@ -32,14 +33,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gold flex items-center justify-center">
-                <span className="text-navy font-display font-bold">G</span>
-              </div>
-              <div className="flex flex-col leading-none">
-                <span className="font-display font-bold text-white text-xl">Glossa</span>
-                <span className="text-gold text-[10px] font-semibold tracking-wide uppercase">In-Depth Language Learning</span>
-              </div>
+            <Link href="/" className="inline-flex mb-4">
+              <Image
+                src="/logo.svg"
+                alt="Glossa — In-Depth Language Learning"
+                width={140}
+                height={56}
+                className="h-14 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
               Master any language faster. Connect with any culture instantly. Glossa arms you with the tools to conquer language barriers — for good.
