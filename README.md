@@ -1,2 +1,3 @@
 # Glossa
-Languag
+Language learning website
+
