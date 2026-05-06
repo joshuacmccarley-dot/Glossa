@@ -9,6 +9,7 @@ const links = [
   { href: "/connect", label: "Connect" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/roadmap", label: "Roadmap" },
 ];
 
 export default function Nav() {
