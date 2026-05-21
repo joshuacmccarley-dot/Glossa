@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
       const hoursLeft = Math.max(1, Math.round((new Date(match.expires_at).getTime() - now.getTime()) / 3600000));
 
       const [{ data: p1 }, { data: p2 }] = await Promise.all([
-        supabase.from("profiles").select("display_name").eq("id", match.user1_id).single(),
-        supabase.from("profiles").select("display_name").eq("id", match.user2_id).single(),
+        supabase.from("profiles").select("display_name").eq("user_id", match.user1_id).single(),
+        supabase.from("profiles").select("display_name").eq("user_id", match.user2_id).single(),
       ]);
       const name1 = (p1 as { display_name: string } | null)?.display_name ?? "Your match";
       const name2 = (p2 as { display_name: string } | null)?.display_name ?? "Your match";

@@ -75,7 +75,7 @@ export default function OnboardingPage() {
       latitude: lat,
       longitude: lng,
       onboarding_complete: true,
-    }).eq("id", user.id);
+    }).eq("user_id", user.id);
 
     if (err) { setError(err.message); setLoading(false); }
     else router.push("/discover");
