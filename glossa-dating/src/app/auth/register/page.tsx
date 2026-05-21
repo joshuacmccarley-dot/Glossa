@@ -41,6 +41,26 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
+
+      // Record referral use best-effort
+      try {
+        const refCode = new URLSearchParams(window.location.search).get("ref");
+        if (refCode) {
+          const { data: refRow } = await supabase
+            .from("referral_codes")
+            .select("user_id")
+            .eq("code", refCode)
+            .maybeSingle();
+          if (refRow?.user_id) {
+            await supabase.from("referral_uses").insert({
+              code: refCode,
+              referred_user_id: data.user.id,
+              referrer_user_id: refRow.user_id,
+            });
+          }
+        }
+      } catch { /* best-effort — do not block registration */ }
+
       router.push("/onboarding");
     }
   };

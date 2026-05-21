@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
   if (block) return err("Action not allowed", 403);
 
   // Check target exists
-  const { data: target } = await supabase.from("profiles").select("id, display_name").eq("id", likedId).single();
+  const { data: target } = await supabase.from("profiles").select("id, display_name").eq("user_id", likedId).single();
   if (!target) return err("User not found", 404);
 
   // Free tier daily limit (10/day)
-  const { data: myProfile } = await supabase.from("profiles").select("is_premium").eq("id", user.id).single();
+  const { data: myProfile } = await supabase.from("profiles").select("is_premium").eq("user_id", user.id).single();
   if (!myProfile?.is_premium) {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -84,8 +84,8 @@ export async function POST(req: NextRequest) {
 
       // Get both users' emails + names for notifications
       const [{ data: myData }, { data: theirData }] = await Promise.all([
-        supabase.auth.admin ? supabase.from("profiles").select("display_name").eq("id", user.id).single() : Promise.resolve({ data: null }),
-        supabase.from("profiles").select("display_name").eq("id", likedId).single(),
+        supabase.auth.admin ? supabase.from("profiles").select("display_name").eq("user_id", user.id).single() : Promise.resolve({ data: null }),
+        supabase.from("profiles").select("display_name").eq("user_id", likedId).single(),
       ]);
 
       const myName = (myData as { display_name: string } | null)?.display_name ?? "Someone";

@@ -30,7 +30,7 @@ export default function PhotosPage() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("avatar_url, extra_photos")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single();
 
       const primary = profile?.avatar_url ?? null;
@@ -80,7 +80,7 @@ export default function PhotosPage() {
     await supabase.from("profiles").update({
       avatar_url: primary,
       extra_photos: extras,
-    }).eq("id", userId);
+    }).eq("user_id", userId);
 
     setSaving(false);
     router.push("/profile");

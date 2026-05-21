@@ -1,8 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Heart, MessageCircle, Calendar, HandHeart, Zap } from "lucide-react";
+import { Search, Heart, MessageCircle, Calendar, HandHeart, Zap, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { NotificationsDrawer } from "@/components/notifications-drawer";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 const NAV_ITEMS = [
   { href: "/discover",  icon: Search,       label: "Discover" },
@@ -14,8 +18,62 @@ const NAV_ITEMS = [
 
 export function AppNavbar() {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    let channel: RealtimeChannel | null = null;
+
+    const init = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch initial unread count
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+      setUnreadCount(count ?? 0);
+
+      // Subscribe to new notifications in real-time
+      channel = supabase
+        .channel(`notifications:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            setUnreadCount((prev) => prev + 1);
+          }
+        )
+        .subscribe();
+    };
+
+    init();
+
+    return () => {
+      if (channel) {
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+      }
+    };
+  }, []);
+
+  const handleOpenDrawer = () => {
+    setDrawerOpen(true);
+    setUnreadCount(0);
+  };
+
   return (
     <>
+      <NotificationsDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
@@ -25,9 +83,25 @@ export function AppNavbar() {
             </div>
             <span className="font-black text-gray-900 text-lg tracking-tight">sinc&apos;d</span>
           </Link>
-          <Link href="/pricing" className="text-[11px] font-bold bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1.5 rounded-full shadow-sm">
-            $5/mo Premium
-          </Link>
+
+          <div className="flex items-center gap-2">
+            {/* Notification bell */}
+            <button
+              onClick={handleOpenDrawer}
+              className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+            >
+              <Bell className="w-5 h-5 text-gray-600" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            <Link href="/pricing" className="text-[11px] font-bold bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1.5 rounded-full shadow-sm">
+              $5/mo Premium
+            </Link>
+          </div>
         </div>
       </header>
 

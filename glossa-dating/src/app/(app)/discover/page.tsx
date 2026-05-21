@@ -3,21 +3,19 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DiscoverProfile } from "@/types";
-import { calculateAge as calcAge } from "@/lib/utils";
 import { getInterestById } from "@/lib/interests";
 import { getWantById } from "@/lib/wants";
 import { MODES, DATING_INTENTIONS, getModeById } from "@/lib/modes";
-import { distanceMiles, formatDistance, DISTANCE_PRESETS, getUserLocation } from "@/lib/location";
-import { rankScore, rankProfiles } from "@/lib/scoring";
+import { formatDistance, DISTANCE_PRESETS, getUserLocation } from "@/lib/location";
 import { ReportModal } from "@/components/ui/report-modal";
 import { PushPrompt } from "@/components/push-prompt";
+import { ProfileCompletion } from "@/components/profile-completion";
 import type { ConnectionMode } from "@/lib/modes";
 import Link from "next/link";
 
 type SortDir = "smart" | "closest" | "furthest";
 
 interface MyContext {
-  id: string;
   interests: string[];
   wants: string[];
   latitude: number | null;
@@ -26,15 +24,30 @@ interface MyContext {
   is_premium: boolean;
 }
 
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 animate-pulse">
+      <div className="bg-gray-200" style={{ aspectRatio: "4/5" }} />
+      <div className="px-3 py-2.5 space-y-1.5">
+        <div className="h-3 bg-gray-200 rounded-full w-3/4" />
+        <div className="h-2.5 bg-gray-100 rounded-full w-1/2" />
+      </div>
+    </div>
+  );
+}
+
 export default function DiscoverPage() {
-  const [allProfiles, setAllProfiles] = useState<DiscoverProfile[]>([]);
-  const [filtered, setFiltered] = useState<DiscoverProfile[]>([]);
+  const [profiles, setProfiles] = useState<DiscoverProfile[]>([]);
   const [selected, setSelected] = useState<DiscoverProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [matched, setMatched] = useState<{ name: string; matchId: string } | null>(null);
   const [myCtx, setMyCtx] = useState<MyContext | null>(null);
   const [reporting, setReporting] = useState<DiscoverProfile | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
 
   // Filters
   const [activeMode, setActiveMode] = useState<ConnectionMode | "all">("all");
@@ -45,102 +58,113 @@ export default function DiscoverPage() {
   const [locating, setLocating] = useState(false);
 
   const blockedRef = useRef<Set<string>>(new Set());
+  const initializedRef = useRef(false);
 
-  useEffect(() => { loadProfiles(); }, []);
-
+  // Load user context on mount
   useEffect(() => {
-    applyFilters(allProfiles);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allProfiles, activeMode, distanceMax, sortDir, myLat, myLng, myCtx]);
+    const initCtx = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  const loadProfiles = async () => {
-    setLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+      const { data: me } = await supabase
+        .from("profiles")
+        .select("interests, wants, is_premium, latitude, longitude, connection_modes")
+        .eq("user_id", user.id)
+        .single();
 
-    const { data: me } = await supabase
-      .from("profiles")
-      .select("id, interests, wants, is_premium, latitude, longitude, connection_modes, updated_at")
-      .eq("id", user.id)
-      .single();
+      const ctx: MyContext = {
+        interests: me?.interests ?? [],
+        wants: me?.wants ?? [],
+        latitude: me?.latitude ?? null,
+        longitude: me?.longitude ?? null,
+        connection_modes: me?.connection_modes ?? [],
+        is_premium: me?.is_premium ?? false,
+      };
+      setMyCtx(ctx);
+      if (me?.latitude) { setMyLat(me.latitude); setMyLng(me.longitude); }
 
-    const ctx: MyContext = {
-      id: user.id,
-      interests: me?.interests ?? [],
-      wants: me?.wants ?? [],
-      latitude: me?.latitude ?? null,
-      longitude: me?.longitude ?? null,
-      connection_modes: me?.connection_modes ?? [],
-      is_premium: me?.is_premium ?? false,
+      const { data: blockRows } = await supabase
+        .from("blocks")
+        .select("blocked_id")
+        .eq("blocker_id", user.id);
+      blockedRef.current = new Set((blockRows ?? []).map((b) => b.blocked_id as string));
+
+      const { data: likedRows } = await supabase
+        .from("likes")
+        .select("liked_id")
+        .eq("liker_id", user.id);
+      setLikedIds(new Set((likedRows ?? []).map((l) => l.liked_id as string)));
+
+      initializedRef.current = true;
     };
-    setMyCtx(ctx);
-    if (me?.latitude) { setMyLat(me.latitude); setMyLng(me.longitude); }
+    initCtx();
+  }, []);
 
-    const { data: blockRows } = await supabase
-      .from("blocks")
-      .select("blocked_id")
-      .eq("blocker_id", user.id);
-    const blocked = new Set((blockRows ?? []).map((b) => b.blocked_id as string));
-    blockedRef.current = blocked;
+  const buildParams = useCallback((pg: number, lat: number | null, lng: number | null) => {
+    const params = new URLSearchParams();
+    params.set("page", String(pg));
+    params.set("mode", activeMode);
+    params.set("sort", sortDir);
+    if (distanceMax !== Infinity) params.set("distance_max", String(distanceMax));
+    if (lat !== null) params.set("lat", String(lat));
+    if (lng !== null) params.set("lng", String(lng));
+    return params;
+  }, [activeMode, distanceMax, sortDir]);
 
-    const { data: likedRows } = await supabase
-      .from("likes")
-      .select("liked_id")
-      .eq("liker_id", user.id);
-    const alreadyLiked = new Set((likedRows ?? []).map((l) => l.liked_id as string));
-    setLikedIds(alreadyLiked);
+  const loadProfiles = useCallback(async (pg: number, lat: number | null, lng: number | null, append = false) => {
+    if (pg === 0) setLoading(true);
+    else setLoadingMore(true);
 
-    const excluded = [user.id, ...alreadyLiked, ...blocked];
-
-    const { data: candidates } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("onboarding_complete", true)
-      .eq("profile_paused", false)
-      .not("id", "in", `(${excluded.join(",")})`)
-      .limit(200);
-
-    const scored: DiscoverProfile[] = (candidates ?? []).map((p) => ({
-      ...p,
-      age: calcAge(p.birthdate),
-      compatibility_score: rankScore(ctx, {
-        id: p.id,
-        interests: p.interests ?? [],
-        wants: p.wants ?? [],
-        latitude: p.latitude,
-        longitude: p.longitude,
-        updated_at: p.updated_at,
-        connection_modes: p.connection_modes ?? [],
-      }),
-      distance_miles: (ctx.latitude && p.latitude)
-        ? distanceMiles(ctx.latitude, ctx.longitude!, p.latitude, p.longitude!)
-        : undefined,
-    }));
-
-    setAllProfiles(scored);
-    setLoading(false);
-  };
-
-  const applyFilters = (profiles: DiscoverProfile[]) => {
-    let result = [...profiles];
-
-    if (activeMode !== "all") {
-      result = result.filter((p) => (p.connection_modes ?? []).includes(activeMode));
+    try {
+      const params = buildParams(pg, lat, lng);
+      const res = await fetch("/api/discover?" + params.toString());
+      if (!res.ok) return;
+      const json = await res.json() as { profiles: DiscoverProfile[]; total: number; hasMore: boolean };
+      if (append) {
+        setProfiles((prev) => [...prev, ...json.profiles]);
+      } else {
+        setProfiles(json.profiles);
+      }
+      setTotal(json.total);
+      setHasMore(json.hasMore);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
+  }, [buildParams]);
 
-    if (distanceMax !== Infinity && myLat !== null) {
-      result = result.filter((p) => (p.distance_miles ?? Infinity) <= distanceMax);
-    }
+  // Re-fetch when filters change (reset to page 0)
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    setPage(0);
+    loadProfiles(0, myLat, myLng, false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeMode, distanceMax, sortDir]);
 
-    result.sort((a, b) => {
-      if (sortDir === "smart") return b.compatibility_score - a.compatibility_score;
-      const da = a.distance_miles ?? Infinity;
-      const db = b.distance_miles ?? Infinity;
-      return sortDir === "closest" ? da - db : db - da;
-    });
+  // Initial load (after ctx is available)
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    loadProfiles(0, myLat, myLng, false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myLat, myLng]);
 
-    setFiltered(result);
+  // Poll for initialization
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (initializedRef.current) {
+        clearInterval(timer);
+        loadProfiles(0, myLat, myLng, false);
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    loadProfiles(nextPage, myLat, myLng, true);
   };
 
   const requestLocation = async () => {
@@ -152,24 +176,22 @@ export default function DiscoverPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("profiles").update({ latitude: pos.lat, longitude: pos.lng }).eq("id", user.id);
+        await supabase.from("profiles").update({ latitude: pos.lat, longitude: pos.lng }).eq("user_id", user.id);
       }
-      setAllProfiles((prev) => prev.map((p) => ({
-        ...p,
-        distance_miles: p.latitude ? distanceMiles(pos.lat, pos.lng, p.latitude, p.longitude!) : undefined,
-      })));
     } catch { /* denied */ }
     finally { setLocating(false); }
   };
 
   const handleLike = useCallback(async (profile: DiscoverProfile) => {
-    if (likedIds.has(profile.id)) return;
-    setLikedIds((prev) => new Set([...prev, profile.id]));
+    // Use profile.user_id (auth ID) for the like, not profile.id (row PK)
+    const authId = profile.user_id;
+    if (likedIds.has(authId)) return;
+    setLikedIds((prev) => new Set([...prev, authId]));
 
     const res = await fetch("/api/likes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ liked_id: profile.id }),
+      body: JSON.stringify({ liked_id: authId }),
     });
     const json = await res.json();
 
@@ -178,35 +200,44 @@ export default function DiscoverPage() {
       setSelected(null);
     } else if (!res.ok) {
       // Revert optimistic update on error
-      setLikedIds((prev) => { const next = new Set(prev); next.delete(profile.id); return next; });
+      setLikedIds((prev) => { const next = new Set(prev); next.delete(authId); return next; });
     }
   }, [likedIds]);
 
   const handleBlock = useCallback((profile: DiscoverProfile) => {
-    blockedRef.current.add(profile.id);
-    setAllProfiles((prev) => prev.filter((p) => p.id !== profile.id));
+    blockedRef.current.add(profile.user_id);
+    setProfiles((prev) => prev.filter((p) => p.user_id !== profile.user_id));
     setSelected(null);
   }, []);
 
+  const handleFilterChange = (fn: () => void) => {
+    fn();
+    setPage(0);
+  };
+
+  const intentionLabel = (p: DiscoverProfile) => DATING_INTENTIONS.find((r) => r.id === p.relationship_intention);
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <div className="w-12 h-12 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin" />
-        <p className="text-gray-400 text-sm">Finding your people...</p>
+      <div className="max-w-lg mx-auto px-4 py-5">
+        <div className="grid grid-cols-2 gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
 
-  const intentionLabel = (p: DiscoverProfile) => DATING_INTENTIONS.find((r) => r.id === p.relationship_intention);
-
   return (
     <div className="max-w-lg mx-auto px-4 py-5">
       <PushPrompt />
+      <ProfileCompletion />
 
       {/* Report modal */}
       {reporting && (
         <ReportModal
-          reportedId={reporting.id}
+          reportedId={reporting.user_id}
           reportedName={reporting.display_name}
           onClose={() => setReporting(null)}
           onBlock={() => handleBlock(reporting)}
@@ -389,11 +420,11 @@ export default function DiscoverPage() {
                 </button>
                 <button
                   onClick={() => handleLike(selected)}
-                  disabled={likedIds.has(selected.id)}
+                  disabled={likedIds.has(selected.user_id)}
                   className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 transition active:scale-[0.98]"
                 >
                   <Heart className="w-4 h-4 fill-white" />
-                  {likedIds.has(selected.id) ? "Connected!" : "Connect"}
+                  {likedIds.has(selected.user_id) ? "Connected!" : "Connect"}
                 </button>
               </div>
             </div>
@@ -404,7 +435,7 @@ export default function DiscoverPage() {
       {/* Mode tabs */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 mb-4 -mx-1 px-1 scrollbar-hide">
         <button
-          onClick={() => setActiveMode("all")}
+          onClick={() => handleFilterChange(() => setActiveMode("all"))}
           className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === "all" ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
         >
           🌐 All
@@ -412,7 +443,7 @@ export default function DiscoverPage() {
         {MODES.map((m) => (
           <button
             key={m.id}
-            onClick={() => setActiveMode(m.id)}
+            onClick={() => handleFilterChange(() => setActiveMode(m.id))}
             className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === m.id ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
           >
             {m.emoji} {m.label}
@@ -426,7 +457,7 @@ export default function DiscoverPage() {
           <button
             key={d.label}
             onClick={() => {
-              setDistanceMax(d.value);
+              handleFilterChange(() => setDistanceMax(d.value));
               if (myLat === null) requestLocation();
             }}
             className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${distanceMax === d.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600"}`}
@@ -438,7 +469,7 @@ export default function DiscoverPage() {
           {(["smart", "closest", "furthest"] as SortDir[]).map((s) => (
             <button
               key={s}
-              onClick={() => setSortDir(s)}
+              onClick={() => handleFilterChange(() => setSortDir(s))}
               className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${sortDir === s ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600"}`}
             >
               {s === "smart" && <Zap className="w-3 h-3" />}
@@ -464,13 +495,13 @@ export default function DiscoverPage() {
 
       {/* Results count */}
       <p className="text-xs text-gray-400 mb-3">
-        {filtered.length} {filtered.length === 1 ? "person" : "people"}
+        {total} {total === 1 ? "person" : "people"}
         {activeMode !== "all" ? ` in ${getModeById(activeMode)?.label}` : " nearby"}
         {sortDir === "smart" ? " · Ranked for you" : ""}
       </p>
 
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {profiles.length === 0 ? (
         <div className="text-center py-20">
           <div className="text-5xl mb-4">🌿</div>
           <p className="font-bold text-gray-900">
@@ -479,95 +510,109 @@ export default function DiscoverPage() {
           <p className="text-sm text-gray-500 mt-1 mb-6">Try expanding your distance or switching modes.</p>
           <div className="flex gap-2 justify-center">
             <button
-              onClick={() => { setActiveMode("all"); setDistanceMax(Infinity); }}
+              onClick={() => { handleFilterChange(() => { setActiveMode("all"); setDistanceMax(Infinity); }); }}
               className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm"
             >
               See everyone
             </button>
-            <button onClick={loadProfiles} className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-full font-semibold text-sm">
+            <button onClick={() => loadProfiles(0, myLat, myLng, false)} className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-full font-semibold text-sm">
               Refresh
             </button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {filtered.map((p) => {
-            const liked = likedIds.has(p.id);
-            const intention = intentionLabel(p);
-            const primaryMode = (p.connection_modes ?? [])[0];
-            const modeInfo = primaryMode ? getModeById(primaryMode) : null;
-            const sharedWants = (p.wants ?? []).filter((w) => (myCtx?.wants ?? []).includes(w)).length;
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            {profiles.map((p) => {
+              const liked = likedIds.has(p.user_id);
+              const intention = intentionLabel(p);
+              const primaryMode = (p.connection_modes ?? [])[0];
+              const modeInfo = primaryMode ? getModeById(primaryMode) : null;
+              const sharedWants = (p.wants ?? []).filter((w) => (myCtx?.wants ?? []).includes(w)).length;
 
-            return (
-              <button
-                key={p.id}
-                onClick={() => setSelected(p)}
-                className="text-left rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] group"
-              >
-                <div className="relative" style={{ aspectRatio: "4/5" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.avatar_url ?? `https://api.dicebear.com/9.x/personas/svg?seed=${p.id}&backgroundColor=d1fae5,99f6e4`}
-                    alt={p.display_name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSelected(p)}
+                  className="text-left rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] group"
+                >
+                  <div className="relative" style={{ aspectRatio: "4/5" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.avatar_url ?? `https://api.dicebear.com/9.x/personas/svg?seed=${p.id}&backgroundColor=d1fae5,99f6e4`}
+                      alt={p.display_name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
-                  {modeInfo && (
-                    <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] text-white font-semibold">
-                      {modeInfo.emoji}
-                    </div>
-                  )}
-
-                  {/* Score badge — show wants overlap first, then interest score */}
-                  {!liked && p.compatibility_score >= 30 && (
-                    <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-500 rounded-full px-2 py-0.5">
-                      <Zap className="w-2.5 h-2.5 text-white" />
-                      <span className="text-[10px] font-bold text-white">{p.compatibility_score}%</span>
-                    </div>
-                  )}
-
-                  {liked && (
-                    <div className="absolute top-2 right-2 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow">
-                      <Heart className="w-3.5 h-3.5 text-white fill-white" />
-                    </div>
-                  )}
-
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-white font-bold text-sm leading-tight">
-                      {p.display_name}{p.show_age !== false ? `, ${p.age}` : ""}
-                    </p>
-                    {p.distance_miles !== undefined && !p.hide_distance && (
-                      <p className="text-white/60 text-[10px]">📍 {formatDistance(p.distance_miles)}</p>
+                    {modeInfo && (
+                      <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] text-white font-semibold">
+                        {modeInfo.emoji}
+                      </div>
                     )}
-                    {intention && (
-                      <p className="text-white/70 text-[10px] mt-0.5">{intention.emoji} {intention.label}</p>
+
+                    {!liked && p.compatibility_score >= 30 && (
+                      <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-500 rounded-full px-2 py-0.5">
+                        <Zap className="w-2.5 h-2.5 text-white" />
+                        <span className="text-[10px] font-bold text-white">{p.compatibility_score}%</span>
+                      </div>
                     )}
+
+                    {liked && (
+                      <div className="absolute top-2 right-2 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+                        <Heart className="w-3.5 h-3.5 text-white fill-white" />
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-white font-bold text-sm leading-tight">
+                        {p.display_name}{p.show_age !== false ? `, ${p.age}` : ""}
+                      </p>
+                      {p.distance_miles !== undefined && !p.hide_distance && (
+                        <p className="text-white/60 text-[10px]">📍 {formatDistance(p.distance_miles)}</p>
+                      )}
+                      {intention && (
+                        <p className="text-white/70 text-[10px] mt-0.5">{intention.emoji} {intention.label}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="px-3 py-2.5">
-                  {p.occupation && <p className="text-xs text-gray-500 truncate">💼 {p.occupation}</p>}
-                  <div className="flex gap-1 mt-1.5 flex-wrap items-center">
-                    {(p.interests ?? []).slice(0, 2).map((id) => {
-                      const interest = getInterestById(id);
-                      return interest ? (
-                        <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
-                          {interest.emoji}
+                  <div className="px-3 py-2.5">
+                    {p.occupation && <p className="text-xs text-gray-500 truncate">💼 {p.occupation}</p>}
+                    <div className="flex gap-1 mt-1.5 flex-wrap items-center">
+                      {(p.interests ?? []).slice(0, 2).map((id) => {
+                        const interest = getInterestById(id);
+                        return interest ? (
+                          <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
+                            {interest.emoji}
+                          </span>
+                        ) : null;
+                      })}
+                      {sharedWants > 0 && (
+                        <span className="text-[10px] bg-teal-50 text-teal-700 rounded-full px-2 py-0.5 font-semibold">
+                          {sharedWants} shared goal{sharedWants > 1 ? "s" : ""}
                         </span>
-                      ) : null;
-                    })}
-                    {sharedWants > 0 && (
-                      <span className="text-[10px] bg-teal-50 text-teal-700 rounded-full px-2 py-0.5 font-semibold">
-                        {sharedWants} shared goal{sharedWants > 1 ? "s" : ""}
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Load more */}
+          {hasMore && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-3 rounded-full font-semibold text-sm transition disabled:opacity-50"
+              >
+                {loadingMore ? "Loading..." : "Load more"}
               </button>
-            );
-          })}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

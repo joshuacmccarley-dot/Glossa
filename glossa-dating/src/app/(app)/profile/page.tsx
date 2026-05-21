@@ -43,7 +43,7 @@ export default function ProfilePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/auth/login"); return; }
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
     setProfile(data);
     if (data) {
       setBio(data.bio || "");
@@ -75,7 +75,7 @@ export default function ProfilePage() {
       show_age: showAge,
       hide_distance: hideDistance,
       profile_paused: profilePaused,
-    }).eq("id", profile.id);
+    }).eq("user_id", profile.user_id);
     await loadProfile();
     setSaving(false);
     setEditing(false);
@@ -89,7 +89,7 @@ export default function ProfilePage() {
       show_age: showAge,
       hide_distance: hideDistance,
       profile_paused: profilePaused,
-    }).eq("id", profile.id);
+    }).eq("user_id", profile.user_id);
     setSaving(false);
   };
 
@@ -122,6 +122,15 @@ export default function ProfilePage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-8">
       {/* Premium banner */}
+      <Link href="/referral" className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:border-emerald-200 transition-colors">
+        <span className="text-xl">🎁</span>
+        <div className="flex-1">
+          <p className="font-semibold text-gray-900 text-sm">Refer a friend — get 30 days free</p>
+          <p className="text-xs text-gray-400">Both of you get Premium at no cost</p>
+        </div>
+        <span className="text-gray-400 text-sm">→</span>
+      </Link>
+
       {!profile.is_premium && (
         <Link href="/pricing" className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-4 text-white mb-5 shadow-lg shadow-emerald-100">
           <Crown className="w-6 h-6 flex-shrink-0" />
