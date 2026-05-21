@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InterestPicker } from "@/components/profile/interest-picker";
 import { MODES, DATING_INTENTIONS } from "@/lib/modes";
+import { WANTS } from "@/lib/wants";
 import { getUserLocation } from "@/lib/location";
 import type { ConnectionMode } from "@/lib/modes";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function OnboardingPage() {
   const [intention, setIntention] = useState("");
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [wants, setWants] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -36,19 +38,21 @@ export default function OnboardingPage() {
   const toggleMode = (id: ConnectionMode) =>
     setModes((prev) => prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]);
 
+  const toggleWant = (id: string) =>
+    setWants((prev) => prev.includes(id) ? prev.filter((w) => w !== id) : prev.length < 10 ? [...prev, id] : prev);
+
   const detectLocation = async () => {
     setLocating(true);
     try {
       const pos = await getUserLocation();
       setLat(pos.lat);
       setLng(pos.lng);
-      // Reverse geocode with nominatim (free, no key needed)
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.lat}&lon=${pos.lng}&format=json`);
       const data = await res.json();
       const city = data.address?.city || data.address?.town || data.address?.village || "";
       const state = data.address?.state || "";
       if (city) setLocation(`${city}${state ? ", " + state : ""}`);
-    } catch { /* location denied, just skip */ }
+    } catch { /* location denied */ }
     finally { setLocating(false); }
   };
 
@@ -66,17 +70,34 @@ export default function OnboardingPage() {
       relationship_intention: intention || null,
       bio: bio || null,
       interests,
+      wants,
       location: location || null,
       latitude: lat,
       longitude: lng,
       onboarding_complete: true,
-    }).eq("user_id", user.id);
+    }).eq("id", user.id);
 
     if (err) { setError(err.message); setLoading(false); }
     else router.push("/discover");
   };
 
   const genders = ["Man", "Woman", "Non-binary", "Genderqueer", "Trans man", "Trans woman", "Prefer not to say"];
+
+  // Filter wants by selected modes; if no modes → show all
+  const wantsByMode = modes.length > 0
+    ? WANTS.filter((w) => modes.includes(w.mode as ConnectionMode) || w.mode === "any")
+    : WANTS;
+
+  const wantModeGroups = (["dating", "events", "help", "community"] as const).filter((m) =>
+    modes.length === 0 || modes.includes(m)
+  );
+
+  const modeLabels: Record<string, string> = {
+    dating: "💍 Dating",
+    events: "🎉 Events",
+    help: "🤝 Lend a Hand",
+    community: "🏘️ Community",
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/70 to-white flex flex-col">
@@ -89,10 +110,12 @@ export default function OnboardingPage() {
           <span className="font-black text-gray-900">sinc&apos;d</span>
           <span className="ml-auto text-xs text-gray-400 italic">&ldquo;Feel connected without questioning&rdquo;</span>
         </div>
-        {/* Progress */}
         <div className="flex gap-1.5 mb-1">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div key={i} className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i < step ? "bg-emerald-500" : "bg-gray-100"}`} />
+            <div
+              key={i}
+              className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i < step ? "bg-emerald-500" : "bg-gray-100"}`}
+            />
           ))}
         </div>
         <p className="text-xs text-gray-400 mb-4">Step {step} of {TOTAL_STEPS}</p>
@@ -101,7 +124,7 @@ export default function OnboardingPage() {
       {/* Content */}
       <div className="flex-1 px-4 max-w-lg mx-auto w-full pb-28 overflow-y-auto">
 
-        {/* Step 1 — Modes (what brings you here?) */}
+        {/* Step 1 — What brings you here */}
         {step === 1 && (
           <div className="space-y-5">
             <div>
@@ -233,12 +256,12 @@ export default function OnboardingPage() {
           <div className="space-y-5">
             <div>
               <h2 className="text-2xl font-black text-gray-900 mb-1">Say something real</h2>
-              <p className="text-gray-500 text-sm">Optional — but people who write something genuine get 5x more connections.</p>
+              <p className="text-gray-500 text-sm">Optional — but people who write something genuine get 5× more connections.</p>
             </div>
             <div>
               <textarea
                 rows={5}
-                placeholder='e.g. "I make excellent tacos and very questionable decisions. Looking for someone to hike badly with and debate movie endings."'
+                placeholder='"I make excellent tacos and very questionable decisions. Looking for someone to hike badly with and debate movie endings."'
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={400}
@@ -247,18 +270,71 @@ export default function OnboardingPage() {
               <p className="text-right text-xs text-gray-400 mt-1">{bio.length}/400</p>
             </div>
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-sm space-y-1.5">
-              <p className="font-semibold text-emerald-800 text-xs uppercase tracking-wide">Try one of these:</p>
+              <p className="font-semibold text-emerald-800 text-xs uppercase tracking-wide">Need a prompt?</p>
               {[
                 "The thing I'm most passionate about right now is...",
                 "A perfect weekend looks like...",
                 "Ask me about my collection of...",
                 "I'm probably overthinking...",
+                "The best conversation starter is...",
               ].map((p) => (
                 <button key={p} type="button" onClick={() => setBio(p)} className="block text-left text-emerald-700 hover:text-emerald-900 transition text-sm">
-                  &rarr; {p}
+                  → {p}
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Step 6 — What I want (intent tags) */}
+        {step === 6 && (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-2xl font-black text-gray-900 mb-1">What are you here for?</h2>
+              <p className="text-gray-500 text-sm">
+                Pick up to 10 tags. sinc&apos;d uses these to show you the most relevant people — not just the closest ones.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {wantModeGroups.map((mode) => {
+                const modeWants = wantsByMode.filter((w) => w.mode === mode);
+                if (modeWants.length === 0) return null;
+                return (
+                  <div key={mode}>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{modeLabels[mode]}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {modeWants.map((w) => {
+                        const active = wants.includes(w.id);
+                        return (
+                          <button
+                            key={w.id}
+                            type="button"
+                            onClick={() => toggleWant(w.id)}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border transition ${
+                              active
+                                ? "bg-emerald-500 text-white border-emerald-500"
+                                : "border-gray-200 text-gray-600 bg-white hover:border-emerald-300"
+                            }`}
+                          >
+                            {w.emoji} {w.label}
+                            {active && <span className="text-white/80">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-400">{wants.length}/10 selected</span>
+              {wants.length === 0 && (
+                <span className="text-gray-400 text-xs">Skip to finish without tags</span>
+              )}
+            </div>
+
             {error && <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
           </div>
         )}
@@ -283,7 +359,7 @@ export default function OnboardingPage() {
             </Button>
           ) : (
             <Button onClick={finish} className="flex-1" loading={loading}>
-              {interests.length > 0 ? `I'm ready — let's go 🚀` : "Skip for now & get started"}
+              {wants.length > 0 ? `I'm ready — let's go 🚀` : "Skip & get started"}
             </Button>
           )}
         </div>

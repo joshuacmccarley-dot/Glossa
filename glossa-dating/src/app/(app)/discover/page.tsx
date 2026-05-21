@@ -1,17 +1,30 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Zap, MapPin, Briefcase, ArrowUpDown, SlidersHorizontal, Flag } from "lucide-react";
+import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DiscoverProfile } from "@/types";
 import { calculateAge as calcAge } from "@/lib/utils";
-import { scoreCompatibility, getInterestById } from "@/lib/interests";
+import { getInterestById } from "@/lib/interests";
+import { getWantById } from "@/lib/wants";
 import { MODES, DATING_INTENTIONS, getModeById } from "@/lib/modes";
 import { distanceMiles, formatDistance, DISTANCE_PRESETS, getUserLocation } from "@/lib/location";
+import { rankScore, rankProfiles } from "@/lib/scoring";
 import { ReportModal } from "@/components/ui/report-modal";
+import { PushPrompt } from "@/components/push-prompt";
 import type { ConnectionMode } from "@/lib/modes";
 import Link from "next/link";
 
-type SortDir = "closest" | "furthest";
+type SortDir = "smart" | "closest" | "furthest";
+
+interface MyContext {
+  id: string;
+  interests: string[];
+  wants: string[];
+  latitude: number | null;
+  longitude: number | null;
+  connection_modes: string[];
+  is_premium: boolean;
+}
 
 export default function DiscoverPage() {
   const [allProfiles, setAllProfiles] = useState<DiscoverProfile[]>([]);
@@ -20,26 +33,25 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [matched, setMatched] = useState<{ name: string; matchId: string } | null>(null);
-  const [myProfile, setMyProfile] = useState<{ user_id: string; interests: string[]; is_premium: boolean } | null>(null);
+  const [myCtx, setMyCtx] = useState<MyContext | null>(null);
   const [reporting, setReporting] = useState<DiscoverProfile | null>(null);
 
   // Filters
   const [activeMode, setActiveMode] = useState<ConnectionMode | "all">("all");
   const [distanceMax, setDistanceMax] = useState<number>(Infinity);
-  const [sortDir, setSortDir] = useState<SortDir>("closest");
+  const [sortDir, setSortDir] = useState<SortDir>("smart");
   const [myLat, setMyLat] = useState<number | null>(null);
   const [myLng, setMyLng] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
 
-  // Track blocked users to filter them out
   const blockedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => { loadProfiles(); }, []);
 
-  // Refilter whenever filters or profiles change
   useEffect(() => {
     applyFilters(allProfiles);
-  }, [allProfiles, activeMode, distanceMax, sortDir, myLat, myLng]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allProfiles, activeMode, distanceMax, sortDir, myLat, myLng, myCtx]);
 
   const loadProfiles = async () => {
     setLoading(true);
@@ -47,17 +59,38 @@ export default function DiscoverPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: me } = await supabase.from("profiles").select("user_id, interests, is_premium, latitude, longitude").eq("user_id", user.id).single();
-    setMyProfile(me);
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("id, interests, wants, is_premium, latitude, longitude, connection_modes, updated_at")
+      .eq("id", user.id)
+      .single();
+
+    const ctx: MyContext = {
+      id: user.id,
+      interests: me?.interests ?? [],
+      wants: me?.wants ?? [],
+      latitude: me?.latitude ?? null,
+      longitude: me?.longitude ?? null,
+      connection_modes: me?.connection_modes ?? [],
+      is_premium: me?.is_premium ?? false,
+    };
+    setMyCtx(ctx);
     if (me?.latitude) { setMyLat(me.latitude); setMyLng(me.longitude); }
 
-    // Load user's blocks
-    const { data: blockRows } = await supabase.from("blocks").select("blocked_id").eq("blocker_id", user.id);
-    const blocked = new Set((blockRows || []).map((b) => b.blocked_id));
+    const { data: blockRows } = await supabase
+      .from("blocks")
+      .select("blocked_id")
+      .eq("blocker_id", user.id);
+    const blocked = new Set((blockRows ?? []).map((b) => b.blocked_id as string));
     blockedRef.current = blocked;
 
-    const { data: likedRows } = await supabase.from("likes").select("to_user_id").eq("from_user_id", user.id);
-    const alreadyLiked = new Set((likedRows || []).map((l) => l.to_user_id));
+    const { data: likedRows } = await supabase
+      .from("likes")
+      .select("liked_id")
+      .eq("liker_id", user.id);
+    const alreadyLiked = new Set((likedRows ?? []).map((l) => l.liked_id as string));
+    setLikedIds(alreadyLiked);
+
     const excluded = [user.id, ...alreadyLiked, ...blocked];
 
     const { data: candidates } = await supabase
@@ -65,15 +98,23 @@ export default function DiscoverPage() {
       .select("*")
       .eq("onboarding_complete", true)
       .eq("profile_paused", false)
-      .not("user_id", "in", `(${excluded.join(",")})`)
-      .limit(100);
+      .not("id", "in", `(${excluded.join(",")})`)
+      .limit(200);
 
-    const scored: DiscoverProfile[] = (candidates || []).map((p) => ({
+    const scored: DiscoverProfile[] = (candidates ?? []).map((p) => ({
       ...p,
       age: calcAge(p.birthdate),
-      compatibility_score: me ? scoreCompatibility(me.interests || [], p.interests || []) : 0,
-      distance_miles: (me?.latitude && p.latitude)
-        ? distanceMiles(me.latitude, me.longitude!, p.latitude, p.longitude!)
+      compatibility_score: rankScore(ctx, {
+        id: p.id,
+        interests: p.interests ?? [],
+        wants: p.wants ?? [],
+        latitude: p.latitude,
+        longitude: p.longitude,
+        updated_at: p.updated_at,
+        connection_modes: p.connection_modes ?? [],
+      }),
+      distance_miles: (ctx.latitude && p.latitude)
+        ? distanceMiles(ctx.latitude, ctx.longitude!, p.latitude, p.longitude!)
         : undefined,
     }));
 
@@ -84,25 +125,19 @@ export default function DiscoverPage() {
   const applyFilters = (profiles: DiscoverProfile[]) => {
     let result = [...profiles];
 
-    // Filter by mode
     if (activeMode !== "all") {
-      result = result.filter((p) => (p.connection_modes || []).includes(activeMode));
+      result = result.filter((p) => (p.connection_modes ?? []).includes(activeMode));
     }
 
-    // Filter by distance
     if (distanceMax !== Infinity && myLat !== null) {
       result = result.filter((p) => (p.distance_miles ?? Infinity) <= distanceMax);
     }
 
-    // Sort
     result.sort((a, b) => {
-      if (myLat !== null && a.distance_miles !== undefined && b.distance_miles !== undefined) {
-        const distDiff = sortDir === "closest"
-          ? (a.distance_miles - b.distance_miles)
-          : (b.distance_miles - a.distance_miles);
-        if (Math.abs(distDiff) > 0.5) return distDiff;
-      }
-      return b.compatibility_score - a.compatibility_score;
+      if (sortDir === "smart") return b.compatibility_score - a.compatibility_score;
+      const da = a.distance_miles ?? Infinity;
+      const db = b.distance_miles ?? Infinity;
+      return sortDir === "closest" ? da - db : db - da;
     });
 
     setFiltered(result);
@@ -114,11 +149,11 @@ export default function DiscoverPage() {
       const pos = await getUserLocation();
       setMyLat(pos.lat);
       setMyLng(pos.lng);
-      // Save to profile
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) await supabase.from("profiles").update({ latitude: pos.lat, longitude: pos.lng }).eq("user_id", user.id);
-      // Recalculate distances
+      if (user) {
+        await supabase.from("profiles").update({ latitude: pos.lat, longitude: pos.lng }).eq("id", user.id);
+      }
       setAllProfiles((prev) => prev.map((p) => ({
         ...p,
         distance_miles: p.latitude ? distanceMiles(pos.lat, pos.lng, p.latitude, p.longitude!) : undefined,
@@ -128,31 +163,30 @@ export default function DiscoverPage() {
   };
 
   const handleLike = useCallback(async (profile: DiscoverProfile) => {
-    if (likedIds.has(profile.user_id)) return;
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    setLikedIds((prev) => new Set([...prev, profile.user_id]));
+    if (likedIds.has(profile.id)) return;
+    setLikedIds((prev) => new Set([...prev, profile.id]));
 
     const res = await fetch("/api/likes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to_user_id: profile.user_id }),
+      body: JSON.stringify({ liked_id: profile.id }),
     });
     const json = await res.json();
 
     if (json.matched) {
       setMatched({ name: profile.display_name, matchId: json.match_id });
       setSelected(null);
+    } else if (!res.ok) {
+      // Revert optimistic update on error
+      setLikedIds((prev) => { const next = new Set(prev); next.delete(profile.id); return next; });
     }
   }, [likedIds]);
 
-  const handleBlock = async (profile: DiscoverProfile) => {
-    blockedRef.current.add(profile.user_id);
-    setAllProfiles((prev) => prev.filter((p) => p.user_id !== profile.user_id));
+  const handleBlock = useCallback((profile: DiscoverProfile) => {
+    blockedRef.current.add(profile.id);
+    setAllProfiles((prev) => prev.filter((p) => p.id !== profile.id));
     setSelected(null);
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -167,11 +201,12 @@ export default function DiscoverPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-5">
+      <PushPrompt />
 
       {/* Report modal */}
       {reporting && (
         <ReportModal
-          reportedId={reporting.user_id}
+          reportedId={reporting.id}
           reportedName={reporting.display_name}
           onClose={() => setReporting(null)}
           onBlock={() => handleBlock(reporting)}
@@ -192,10 +227,17 @@ export default function DiscoverPage() {
               <p className="text-amber-600 mt-0.5 text-xs">Start a conversation before time closes.</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setMatched(null)} className="flex-1 border-2 border-gray-200 py-3 rounded-2xl text-sm font-semibold text-gray-600">
+              <button
+                onClick={() => setMatched(null)}
+                className="flex-1 border-2 border-gray-200 py-3 rounded-2xl text-sm font-semibold text-gray-600"
+              >
                 Keep browsing
               </button>
-              <Link href={`/chat/${matched.matchId}`} onClick={() => setMatched(null)} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-2xl text-sm font-bold text-center">
+              <Link
+                href={`/chat/${matched.matchId}`}
+                onClick={() => setMatched(null)}
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-2xl text-sm font-bold text-center"
+              >
                 Say something →
               </Link>
             </div>
@@ -205,24 +247,38 @@ export default function DiscoverPage() {
 
       {/* Profile detail drawer */}
       {selected && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelected(null)}>
+        <div
+          className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setSelected(null)}
+        >
           <div
             className="bg-white rounded-t-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative h-72">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={selected.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${selected.user_id}&backgroundColor=d1fae5,99f6e4`}
+                src={selected.avatar_url ?? `https://api.dicebear.com/9.x/personas/svg?seed=${selected.id}&backgroundColor=d1fae5,99f6e4`}
                 alt={selected.display_name}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <button onClick={() => setSelected(null)} className="absolute top-4 left-4 w-9 h-9 bg-black/30 backdrop-blur rounded-full flex items-center justify-center text-white text-sm">✕</button>
-              <button onClick={() => setReporting(selected)} className="absolute top-4 right-4 w-9 h-9 bg-black/30 backdrop-blur rounded-full flex items-center justify-center">
+              <button
+                onClick={() => setSelected(null)}
+                className="absolute top-4 left-4 w-9 h-9 bg-black/30 backdrop-blur rounded-full flex items-center justify-center text-white text-sm"
+              >
+                ✕
+              </button>
+              <button
+                onClick={() => setReporting(selected)}
+                className="absolute top-4 right-4 w-9 h-9 bg-black/30 backdrop-blur rounded-full flex items-center justify-center"
+              >
                 <Flag className="w-4 h-4 text-white" />
               </button>
               <div className="absolute bottom-4 left-4 right-4">
-                <h2 className="text-2xl font-black text-white">{selected.display_name}{selected.show_age !== false ? `, ${selected.age}` : ""}</h2>
+                <h2 className="text-2xl font-black text-white">
+                  {selected.display_name}{selected.show_age !== false ? `, ${selected.age}` : ""}
+                </h2>
                 {selected.location && !selected.hide_distance && (
                   <div className="flex items-center gap-1 text-white/80 text-sm mt-0.5">
                     <MapPin className="w-3.5 h-3.5" />
@@ -236,15 +292,17 @@ export default function DiscoverPage() {
             </div>
 
             <div className="p-5 space-y-4 pb-8">
+              {/* Compatibility score */}
               {selected.compatibility_score > 0 && (
                 <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
                   <Zap className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold text-emerald-700 text-sm">{selected.compatibility_score}% interest match</span>
+                  <span className="font-semibold text-emerald-700 text-sm">{selected.compatibility_score}% match for you</span>
                 </div>
               )}
 
+              {/* Modes + occupation + intention */}
               <div className="flex flex-wrap gap-2">
-                {(selected.connection_modes || []).map((m) => {
+                {(selected.connection_modes ?? []).map((m) => {
                   const mode = getModeById(m);
                   if (!mode) return null;
                   return (
@@ -269,16 +327,50 @@ export default function DiscoverPage() {
                 <p className="text-gray-700 leading-relaxed text-sm">{selected.bio}</p>
               )}
 
-              {selected.interests.length > 0 && (
+              {/* Shared wants */}
+              {selected.wants && selected.wants.length > 0 && myCtx && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Here for</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selected.wants.map((id) => {
+                      const want = getWantById(id);
+                      if (!want) return null;
+                      const isShared = (myCtx.wants ?? []).includes(id);
+                      return (
+                        <span
+                          key={id}
+                          className={`text-xs px-3 py-1.5 rounded-full font-medium border ${
+                            isShared
+                              ? "bg-teal-500 text-white border-teal-500"
+                              : "bg-gray-50 text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {want.emoji} {want.label}{isShared ? " ✓" : ""}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Interests */}
+              {selected.interests && selected.interests.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Interests</p>
                   <div className="flex flex-wrap gap-2">
                     {selected.interests.map((id) => {
                       const interest = getInterestById(id);
                       if (!interest) return null;
-                      const isShared = (myProfile?.interests || []).includes(id);
+                      const isShared = (myCtx?.interests ?? []).includes(id);
                       return (
-                        <span key={id} className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium border ${isShared ? "bg-emerald-500 text-white border-emerald-500" : "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                        <span
+                          key={id}
+                          className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium border ${
+                            isShared
+                              ? "bg-emerald-500 text-white border-emerald-500"
+                              : "bg-gray-50 text-gray-600 border-gray-200"
+                          }`}
+                        >
                           {interest.emoji} {interest.label}{isShared ? " ✓" : ""}
                         </span>
                       );
@@ -287,16 +379,21 @@ export default function DiscoverPage() {
                 </div>
               )}
 
+              {/* Actions */}
               <div className="flex gap-2 pt-2">
-                <button onClick={() => { handleBlock(selected); }} className="px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm font-medium text-gray-500 hover:bg-gray-50 transition">
+                <button
+                  onClick={() => handleBlock(selected)}
+                  className="px-4 py-3 border-2 border-gray-200 rounded-2xl text-sm font-medium text-gray-500 hover:bg-gray-50 transition"
+                >
                   Skip
                 </button>
                 <button
                   onClick={() => handleLike(selected)}
-                  disabled={likedIds.has(selected.user_id)}
+                  disabled={likedIds.has(selected.id)}
                   className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 transition active:scale-[0.98]"
                 >
-                  {likedIds.has(selected.user_id) ? "💚 Connected!" : "💚 Connect"}
+                  <Heart className="w-4 h-4 fill-white" />
+                  {likedIds.has(selected.id) ? "Connected!" : "Connect"}
                 </button>
               </div>
             </div>
@@ -324,55 +421,53 @@ export default function DiscoverPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex items-center gap-2 mb-5">
-        {/* Distance presets */}
-        <div className="flex gap-1 flex-1 overflow-x-auto scrollbar-hide">
-          {DISTANCE_PRESETS.map((d) => (
+      <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-hide">
+        {DISTANCE_PRESETS.map((d) => (
+          <button
+            key={d.label}
+            onClick={() => {
+              setDistanceMax(d.value);
+              if (myLat === null) requestLocation();
+            }}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${distanceMax === d.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600"}`}
+          >
+            {d.label}
+          </button>
+        ))}
+        <div className="ml-auto flex-shrink-0 flex gap-1.5">
+          {(["smart", "closest", "furthest"] as SortDir[]).map((s) => (
             <button
-              key={d.label}
-              onClick={() => {
-                setDistanceMax(d.value);
-                if (myLat === null) requestLocation();
-              }}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${distanceMax === d.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600"}`}
+              key={s}
+              onClick={() => setSortDir(s)}
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${sortDir === s ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600"}`}
             >
-              {d.label}
+              {s === "smart" && <Zap className="w-3 h-3" />}
+              {s === "closest" && <MapPin className="w-3 h-3" />}
+              {s === "furthest" && <ArrowUpDown className="w-3 h-3" />}
+              {s === "smart" ? "Best" : s === "closest" ? "Near" : "Far"}
             </button>
           ))}
         </div>
-
-        {/* Sort toggle */}
-        <button
-          onClick={() => setSortDir((d) => d === "closest" ? "furthest" : "closest")}
-          className="flex-shrink-0 flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-200 transition"
-        >
-          <ArrowUpDown className="w-3 h-3" />
-          {sortDir === "closest" ? "Closest" : "Furthest"}
-        </button>
-
-        {/* Location request */}
-        {myLat === null && (
-          <button
-            onClick={requestLocation}
-            disabled={locating}
-            className="flex-shrink-0 flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-semibold"
-          >
-            <MapPin className="w-3 h-3" />
-            {locating ? "..." : "Near me"}
-          </button>
-        )}
       </div>
+
+      {/* Location request if no lat */}
+      {myLat === null && (
+        <button
+          onClick={requestLocation}
+          disabled={locating}
+          className="w-full flex items-center justify-center gap-2 mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold"
+        >
+          <MapPin className="w-4 h-4" />
+          {locating ? "Detecting location..." : "Enable location for distance filters"}
+        </button>
+      )}
 
       {/* Results count */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-gray-400">
-          {filtered.length} {filtered.length === 1 ? "person" : "people"}
-          {activeMode !== "all" && ` in ${getModeById(activeMode)?.label}`}
-        </p>
-        <button className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600">
-          <SlidersHorizontal className="w-3.5 h-3.5" /> More filters
-        </button>
-      </div>
+      <p className="text-xs text-gray-400 mb-3">
+        {filtered.length} {filtered.length === 1 ? "person" : "people"}
+        {activeMode !== "all" ? ` in ${getModeById(activeMode)?.label}` : " nearby"}
+        {sortDir === "smart" ? " · Ranked for you" : ""}
+      </p>
 
       {/* Grid */}
       {filtered.length === 0 ? (
@@ -383,7 +478,10 @@ export default function DiscoverPage() {
           </p>
           <p className="text-sm text-gray-500 mt-1 mb-6">Try expanding your distance or switching modes.</p>
           <div className="flex gap-2 justify-center">
-            <button onClick={() => { setActiveMode("all"); setDistanceMax(Infinity); }} className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm">
+            <button
+              onClick={() => { setActiveMode("all"); setDistanceMax(Infinity); }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm"
+            >
               See everyone
             </button>
             <button onClick={loadProfiles} className="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-full font-semibold text-sm">
@@ -394,33 +492,35 @@ export default function DiscoverPage() {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {filtered.map((p) => {
-            const liked = likedIds.has(p.user_id);
+            const liked = likedIds.has(p.id);
             const intention = intentionLabel(p);
-            const primaryMode = (p.connection_modes || [])[0];
+            const primaryMode = (p.connection_modes ?? [])[0];
             const modeInfo = primaryMode ? getModeById(primaryMode) : null;
+            const sharedWants = (p.wants ?? []).filter((w) => (myCtx?.wants ?? []).includes(w)).length;
+
             return (
               <button
-                key={p.user_id}
+                key={p.id}
                 onClick={() => setSelected(p)}
                 className="text-left rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] group"
               >
                 <div className="relative" style={{ aspectRatio: "4/5" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={p.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${p.user_id}&backgroundColor=d1fae5,99f6e4`}
+                    src={p.avatar_url ?? `https://api.dicebear.com/9.x/personas/svg?seed=${p.id}&backgroundColor=d1fae5,99f6e4`}
                     alt={p.display_name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
 
-                  {/* Mode badge */}
                   {modeInfo && (
                     <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] text-white font-semibold">
-                      {modeInfo.emoji} {modeInfo.label}
+                      {modeInfo.emoji}
                     </div>
                   )}
 
-                  {/* Compatibility */}
-                  {p.compatibility_score >= 40 && (
+                  {/* Score badge — show wants overlap first, then interest score */}
+                  {!liked && p.compatibility_score >= 30 && (
                     <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-500 rounded-full px-2 py-0.5">
                       <Zap className="w-2.5 h-2.5 text-white" />
                       <span className="text-[10px] font-bold text-white">{p.compatibility_score}%</span>
@@ -428,8 +528,8 @@ export default function DiscoverPage() {
                   )}
 
                   {liked && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs">💚</span>
+                    <div className="absolute top-2 right-2 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+                      <Heart className="w-3.5 h-3.5 text-white fill-white" />
                     </div>
                   )}
 
@@ -445,16 +545,23 @@ export default function DiscoverPage() {
                     )}
                   </div>
                 </div>
+
                 <div className="px-3 py-2.5">
                   {p.occupation && <p className="text-xs text-gray-500 truncate">💼 {p.occupation}</p>}
-                  <div className="flex gap-1 mt-1.5 flex-wrap">
-                    {p.interests.slice(0, 2).map((id) => {
+                  <div className="flex gap-1 mt-1.5 flex-wrap items-center">
+                    {(p.interests ?? []).slice(0, 2).map((id) => {
                       const interest = getInterestById(id);
                       return interest ? (
-                        <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">{interest.emoji}</span>
+                        <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
+                          {interest.emoji}
+                        </span>
                       ) : null;
                     })}
-                    {p.interests.length > 2 && <span className="text-[10px] text-gray-400">+{p.interests.length - 2}</span>}
+                    {sharedWants > 0 && (
+                      <span className="text-[10px] bg-teal-50 text-teal-700 rounded-full px-2 py-0.5 font-semibold">
+                        {sharedWants} shared goal{sharedWants > 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
                 </div>
               </button>
