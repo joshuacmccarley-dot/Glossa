@@ -16,7 +16,10 @@ export interface Profile {
   relationship_intention: string | null;
   connection_modes: ConnectionMode[];
   photos: string[];
+  avatar_url: string | null;
+  extra_photos: string[];
   interests: string[];
+  wants: string[];
   is_premium: boolean;
   onboarding_complete: boolean;
   // Privacy controls
@@ -34,8 +37,9 @@ export interface Profile {
 
 export interface Like {
   id: string;
-  from_user_id: string;
-  to_user_id: string;
+  liker_id: string;
+  liked_id: string;
+  is_mutual: boolean;
   created_at: string;
 }
 

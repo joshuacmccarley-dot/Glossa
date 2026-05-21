@@ -4,10 +4,11 @@ import { createClient } from "@/lib/supabase/client";
 import { Profile } from "@/types";
 import { calculateAge } from "@/lib/utils";
 import { getInterestById, RELATIONSHIP_INTENTIONS, WORK_FIELDS } from "@/lib/interests";
+import { WANTS, getWantById } from "@/lib/wants";
 import { InterestPicker } from "@/components/profile/interest-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Edit3, Crown, Camera } from "lucide-react";
+import { LogOut, Edit3, Crown, Camera, Eye, EyeOff, PauseCircle, PlayCircle, Images } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "wants" | "privacy">("profile");
 
   // Edit form state
   const [bio, setBio] = useState("");
@@ -25,16 +27,23 @@ export default function ProfilePage() {
   const [workField, setWorkField] = useState("");
   const [intention, setIntention] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [wants, setWants] = useState<string[]>([]);
+
+  // Privacy state
+  const [showAge, setShowAge] = useState(true);
+  const [hideDistance, setHideDistance] = useState(false);
+  const [profilePaused, setProfilePaused] = useState(false);
 
   useEffect(() => {
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadProfile = async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/auth/login"); return; }
-    const { data } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
     setProfile(data);
     if (data) {
       setBio(data.bio || "");
@@ -43,6 +52,10 @@ export default function ProfilePage() {
       setWorkField(data.work_field || "");
       setIntention(data.relationship_intention || "");
       setInterests(data.interests || []);
+      setWants(data.wants || []);
+      setShowAge(data.show_age !== false);
+      setHideDistance(data.hide_distance === true);
+      setProfilePaused(data.profile_paused === true);
     }
     setLoading(false);
   };
@@ -51,16 +64,45 @@ export default function ProfilePage() {
     if (!profile) return;
     setSaving(true);
     const supabase = createClient();
-    await supabase.from("profiles").update({ bio, location, occupation, work_field: workField, relationship_intention: intention, interests }).eq("user_id", profile.user_id);
+    await supabase.from("profiles").update({
+      bio,
+      location,
+      occupation,
+      work_field: workField,
+      relationship_intention: intention,
+      interests,
+      wants,
+      show_age: showAge,
+      hide_distance: hideDistance,
+      profile_paused: profilePaused,
+    }).eq("id", profile.id);
     await loadProfile();
     setSaving(false);
     setEditing(false);
+  };
+
+  const savePrivacy = async () => {
+    if (!profile) return;
+    setSaving(true);
+    const supabase = createClient();
+    await supabase.from("profiles").update({
+      show_age: showAge,
+      hide_distance: hideDistance,
+      profile_paused: profilePaused,
+    }).eq("id", profile.id);
+    setSaving(false);
   };
 
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
+  };
+
+  const toggleWant = (id: string) => {
+    setWants((prev) =>
+      prev.includes(id) ? prev.filter((w) => w !== id) : prev.length < 10 ? [...prev, id] : prev
+    );
   };
 
   if (loading) {
@@ -103,14 +145,18 @@ export default function ProfilePage() {
         <div className="relative h-40 bg-gradient-to-br from-emerald-400 to-teal-400">
           <div className="absolute -bottom-10 left-6">
             <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={profile.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${profile.user_id}&backgroundColor=d1fae5`}
+                src={profile.avatar_url || `https://api.dicebear.com/9.x/personas/svg?seed=${profile.id}&backgroundColor=d1fae5`}
                 alt={profile.display_name}
                 className="w-20 h-20 rounded-2xl border-4 border-white object-cover bg-emerald-100 shadow"
               />
-              <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow">
+              <Link
+                href="/profile/photos"
+                className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow"
+              >
                 <Camera className="w-3.5 h-3.5 text-white" />
-              </button>
+              </Link>
             </div>
           </div>
           <button
@@ -123,14 +169,15 @@ export default function ProfilePage() {
         </div>
 
         <div className="pt-12 px-6 pb-6">
-          <h1 className="text-2xl font-black text-gray-900">{profile.display_name}, {age}</h1>
+          <h1 className="text-2xl font-black text-gray-900">
+            {profile.display_name}{showAge && age ? `, ${age}` : ""}
+          </h1>
           {profile.location && <p className="text-gray-500 text-sm mt-0.5">📍 {profile.location}</p>}
           {profile.occupation && <p className="text-gray-500 text-sm">💼 {profile.occupation}{workLabel ? ` · ${workLabel.emoji} ${workLabel.label}` : ""}</p>}
           {intentionLabel && <p className="text-emerald-600 text-sm font-medium mt-1">{intentionLabel.emoji} {intentionLabel.label}</p>}
           {profile.bio && <p className="text-gray-600 text-sm mt-3 leading-relaxed">{profile.bio}</p>}
 
-          {/* Interests */}
-          {profile.interests.length > 0 && (
+          {profile.interests && profile.interests.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {profile.interests.map((id) => {
                 const interest = getInterestById(id);
@@ -143,11 +190,52 @@ export default function ProfilePage() {
               })}
             </div>
           )}
+
+          {profile.wants && profile.wants.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {profile.wants.map((id) => {
+                const want = getWantById(id);
+                if (!want) return null;
+                return (
+                  <span key={id} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full font-medium">
+                    {want.emoji} {want.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          <Link
+            href="/profile/photos"
+            className="mt-4 flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+          >
+            <Images className="w-4 h-4" />
+            Manage photos
+          </Link>
         </div>
       </div>
 
-      {/* Edit form */}
-      {editing && (
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        {([
+          { id: "profile", label: "Profile" },
+          { id: "wants", label: "What I want" },
+          { id: "privacy", label: "Privacy" },
+        ] as const).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${
+              activeTab === t.id ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Profile edit tab */}
+      {activeTab === "profile" && editing && (
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4 space-y-5">
           <h2 className="font-bold text-gray-900">Edit profile</h2>
           <div>
@@ -163,6 +251,22 @@ export default function ProfilePage() {
           </div>
           <Input id="location" label="Location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, State" />
           <Input id="occupation" label="Occupation" value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Job title" />
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-2">Work field</label>
+            <div className="flex flex-wrap gap-2">
+              {WORK_FIELDS.map((wf) => (
+                <button
+                  key={wf.id}
+                  type="button"
+                  onClick={() => setWorkField(workField === wf.id ? "" : wf.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${workField === wf.id ? "bg-emerald-500 text-white border-emerald-500" : "border-gray-200 text-gray-600"}`}
+                >
+                  {wf.emoji} {wf.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-2">Relationship intention</label>
@@ -182,13 +286,119 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Your interests (pick up to 15)</label>
+            <label className="text-sm font-medium text-gray-700 block mb-2">Your interests (up to 15)</label>
             <InterestPicker selected={interests} onChange={setInterests} max={15} />
           </div>
 
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" onClick={() => setEditing(false)} className="flex-1">Cancel</Button>
             <Button onClick={save} loading={saving} className="flex-1">Save changes</Button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "profile" && !editing && (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4 text-center text-sm text-gray-400">
+          Tap <strong>Edit</strong> in the header to update your profile.
+        </div>
+      )}
+
+      {/* "What I want" tab */}
+      {activeTab === "wants" && (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4">
+          <h2 className="font-bold text-gray-900 mb-1">What I&apos;m here for</h2>
+          <p className="text-xs text-gray-400 mb-4">Pick up to 10 tags. The app uses these to surface the most relevant people to you.</p>
+          <div className="space-y-5">
+            {(["dating", "events", "help", "community"] as const).map((mode) => {
+              const modeWants = WANTS.filter((w) => w.mode === mode);
+              const modeLabels: Record<string, string> = { dating: "💍 Dating", events: "🎉 Events", help: "🤝 Lend a Hand", community: "🏘️ Community" };
+              return (
+                <div key={mode}>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{modeLabels[mode]}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {modeWants.map((w) => (
+                      <button
+                        key={w.id}
+                        type="button"
+                        onClick={() => toggleWant(w.id)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border transition ${
+                          wants.includes(w.id)
+                            ? "bg-emerald-500 text-white border-emerald-500"
+                            : "border-gray-200 text-gray-600 hover:border-emerald-300"
+                        }`}
+                      >
+                        {w.emoji} {w.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-5 flex items-center justify-between">
+            <span className="text-xs text-gray-400">{wants.length}/10 selected</span>
+            <Button onClick={save} loading={saving} size="sm">Save</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy tab */}
+      {activeTab === "privacy" && (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4 space-y-4">
+          <h2 className="font-bold text-gray-900 mb-2">Privacy controls</h2>
+
+          <div className="flex items-start justify-between gap-4 py-3 border-b border-gray-50">
+            <div className="flex items-start gap-3">
+              {showAge ? <Eye className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" /> : <EyeOff className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />}
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Show age</p>
+                <p className="text-xs text-gray-400">Your age appears on your profile card</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAge((v) => !v)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${showAge ? "bg-emerald-500" : "bg-gray-200"}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showAge ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 py-3 border-b border-gray-50">
+            <div className="flex items-start gap-3">
+              <EyeOff className={`w-5 h-5 mt-0.5 flex-shrink-0 ${hideDistance ? "text-emerald-500" : "text-gray-400"}`} />
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Hide distance</p>
+                <p className="text-xs text-gray-400">Others won&apos;t see how far away you are</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setHideDistance((v) => !v)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${hideDistance ? "bg-emerald-500" : "bg-gray-200"}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${hideDistance ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 py-3">
+            <div className="flex items-start gap-3">
+              {profilePaused ? <PauseCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" /> : <PlayCircle className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />}
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Pause profile</p>
+                <p className="text-xs text-gray-400">Hide your profile from Discover while you take a break</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setProfilePaused((v) => !v)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${profilePaused ? "bg-amber-400" : "bg-gray-200"}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${profilePaused ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
+          <Button onClick={savePrivacy} loading={saving} className="w-full mt-2">Save privacy settings</Button>
+
+          <div className="pt-2 border-t border-gray-100 space-y-2">
+            <Link href="/privacy" className="block text-sm text-gray-400 hover:text-gray-600">Privacy policy →</Link>
           </div>
         </div>
       )}
