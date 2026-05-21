@@ -48,7 +48,7 @@ export default function EventsPage() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("latitude, longitude, display_name")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (profile?.latitude) { setMyLat(profile.latitude); setMyLng(profile.longitude); }
@@ -61,23 +61,33 @@ export default function EventsPage() {
       .gte("starts_at", now)
       .order("starts_at");
 
-    const enriched = await Promise.all((data ?? []).map(async (e) => {
-      const { data: creator } = await supabase
+    const eventsData = data ?? [];
+
+    // Batch-fetch all creator profiles in ONE query (N+1 fix)
+    const creatorIds = [...new Set(eventsData.map((e) => e.creator_id))];
+    let creatorProfilesMap: Record<string, { display_name: string; avatar_url: string | null; user_id: string }> = {};
+    if (creatorIds.length > 0) {
+      const { data: creatorProfiles } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, id")
-        .eq("id", e.creator_id)
-        .single();
+        .select("display_name, avatar_url, user_id")
+        .in("user_id", creatorIds);
+      for (const cp of creatorProfiles ?? []) {
+        creatorProfilesMap[cp.user_id] = cp;
+      }
+    }
+
+    const enriched = eventsData.map((e) => {
       const rsvps = e.event_rsvps ?? [];
       return {
         ...e,
-        creator_profile: creator,
+        creator_profile: creatorProfilesMap[e.creator_id] ?? null,
         rsvp_count: rsvps.filter((r: { status: string }) => r.status === "going").length,
         user_rsvp: rsvps.find((r: { user_id: string }) => r.user_id === user.id)?.status ?? null,
         distance_miles: (profile?.latitude && e.latitude)
           ? distanceMiles(profile.latitude, profile.longitude!, e.latitude, e.longitude!)
           : undefined,
       };
-    }));
+    });
 
     setEvents(enriched);
     setLoading(false);

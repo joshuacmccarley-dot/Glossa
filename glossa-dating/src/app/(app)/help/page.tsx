@@ -43,13 +43,25 @@ export default function HelpPage() {
 
     const { data } = await supabase.from("help_posts").select("*").eq("is_resolved", false).order("created_at", { ascending: false }).limit(80);
 
-    const enriched = await Promise.all((data || []).map(async (p) => {
-      const { data: poster } = await supabase.from("profiles").select("display_name, photos, user_id").eq("user_id", p.user_id).single();
-      return {
-        ...p,
-        poster_profile: poster,
-        distance_miles: (profile?.latitude && p.latitude) ? distanceMiles(profile.latitude, profile.longitude!, p.latitude, p.longitude!) : undefined,
-      };
+    const postsData = data || [];
+
+    // Batch-fetch all poster profiles in ONE query (N+1 fix)
+    const posterIds = [...new Set(postsData.map((p) => p.user_id))];
+    let posterProfilesMap: Record<string, { display_name: string; photos: string[] | null; user_id: string }> = {};
+    if (posterIds.length > 0) {
+      const { data: posterProfiles } = await supabase
+        .from("profiles")
+        .select("display_name, photos, user_id")
+        .in("user_id", posterIds);
+      for (const pp of posterProfiles ?? []) {
+        posterProfilesMap[pp.user_id] = pp;
+      }
+    }
+
+    const enriched = postsData.map((p) => ({
+      ...p,
+      poster_profile: posterProfilesMap[p.user_id] ?? null,
+      distance_miles: (profile?.latitude && p.latitude) ? distanceMiles(profile.latitude, profile.longitude!, p.latitude, p.longitude!) : undefined,
     }));
 
     setPosts(enriched);

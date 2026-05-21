@@ -59,21 +59,29 @@ export default function MatchesPage() {
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
-    const enriched = await Promise.all(
-      (matches || []).map(async (m) => {
-        const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
-        const { data: otherProfile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", otherId)
-          .single();
+    const matchRows = matches || [];
 
-        const msgs = m.messages || [];
-        const lastMsg = msgs[msgs.length - 1] || null;
+    // Batch-fetch all other-user profiles in ONE query (N+1 fix)
+    const otherIds = matchRows.map((m) => m.user1_id === user.id ? m.user2_id : m.user1_id);
+    const uniqueOtherIds = [...new Set(otherIds)];
+    let profilesMap: Record<string, Record<string, unknown>> = {};
+    if (uniqueOtherIds.length > 0) {
+      const { data: profilesList } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", uniqueOtherIds);
+      for (const p of profilesList ?? []) {
+        profilesMap[(p as Record<string, unknown>).user_id as string] = p as Record<string, unknown>;
+      }
+    }
 
-        return { ...m, profile: otherProfile, last_message: lastMsg };
-      })
-    );
+    const enriched = matchRows.map((m) => {
+      const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
+      const otherProfile = profilesMap[otherId] || null;
+      const msgs = m.messages || [];
+      const lastMsg = msgs[msgs.length - 1] || null;
+      return { ...m, profile: otherProfile, last_message: lastMsg };
+    });
 
     // Check expired
     const now = new Date();

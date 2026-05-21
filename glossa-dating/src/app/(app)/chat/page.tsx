@@ -30,24 +30,34 @@ export default function ChatListPage() {
 
     const { data: matchRows } = await supabase
       .from("matches")
-      .select("*")
+      .select("*, messages(id, content, created_at, sender_id)")
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
       .eq("is_expired", false)
       .order("created_at", { ascending: false });
 
-    const enriched = await Promise.all(
-      (matchRows || []).map(async (m) => {
-        const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
-        const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", otherId).single();
-        const { data: msgs } = await supabase
-          .from("messages")
-          .select("*")
-          .eq("match_id", m.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
-        return { ...m, profile, last_message: msgs?.[0] || null };
-      })
-    );
+    const rows = matchRows || [];
+
+    // Batch-fetch all other-user profiles in ONE query (N+1 fix)
+    const otherIds = rows.map((m) => m.user1_id === user.id ? m.user2_id : m.user1_id);
+    const uniqueOtherIds = [...new Set(otherIds)];
+    let profilesMap: Record<string, Record<string, unknown>> = {};
+    if (uniqueOtherIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", uniqueOtherIds);
+      for (const p of profiles ?? []) {
+        profilesMap[(p as Record<string, unknown>).user_id as string] = p as Record<string, unknown>;
+      }
+    }
+
+    const enriched = rows.map((m) => {
+      const otherId = m.user1_id === user.id ? m.user2_id : m.user1_id;
+      const profile = profilesMap[otherId] || null;
+      const msgs = (m.messages || []) as Array<{ created_at: string; [key: string]: unknown }>;
+      const sortedMsgs = [...msgs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return { ...m, profile, last_message: sortedMsgs[0] || null };
+    });
 
     setMatches(enriched);
     setLoading(false);

@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 // In-memory rate limiter (use Redis/Upstash in production)
+// NOTE: This in-memory map is NOT shared across serverless instances. On multi-instance
+// deployments (e.g. Vercel with multiple edge workers) each instance maintains its own
+// counter, so the effective limit is limit * num_instances. For true distributed rate
+// limiting, replace this with an Upstash Redis adapter or similar.
 const rateLimit = new Map<string, { count: number; reset: number }>();
 
 function getRateLimitKey(req: NextRequest): string {
@@ -60,6 +64,21 @@ export async function middleware(request: NextRequest) {
 
   // Supabase session refresh + auth redirect
   const response = await updateSession(request);
+
+  // Tell search engines not to index private/auth paths
+  const { pathname: pn } = request.nextUrl;
+  if (
+    pn.startsWith("/api/") ||
+    pn.startsWith("/auth/") ||
+    pn.startsWith("/admin") ||
+    pn.startsWith("/onboarding") ||
+    pn.startsWith("/chat") ||
+    pn.startsWith("/matches") ||
+    pn.startsWith("/profile") ||
+    pn.startsWith("/discover")
+  ) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   // Security headers on all responses
   response.headers.set("X-Frame-Options", "DENY");
