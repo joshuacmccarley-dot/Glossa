@@ -29,6 +29,8 @@ export async function GET(req: NextRequest) {
     .eq("user_id", user.id)
     .single();
 
+  await supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("user_id", user.id);
+
   const myLat = queryLat ?? me?.latitude ?? null;
   const myLng = queryLng ?? me?.longitude ?? null;
 
