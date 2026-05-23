@@ -1,4 +1,5 @@
 import type { ConnectionMode } from "@/lib/modes";
+import type { ProfilePrompt } from "@/lib/prompts";
 
 export interface Profile {
   id: string;
@@ -31,6 +32,16 @@ export interface Profile {
   show_age: boolean;
   profile_paused: boolean;
   photo_verified: boolean;
+  // Prompts
+  profile_prompts: ProfilePrompt[] | null;
+  // Dating details
+  has_kids: string | null;
+  wants_kids: string | null;
+  relationship_style: string | null;
+  drinking: string | null;
+  smoking: string | null;
+  // Activity
+  last_active_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -79,6 +90,7 @@ export interface DiscoverProfile extends Profile {
   compatibility_score: number;
   age: number;
   distance_miles?: number;
+  last_active_at: string | null;
 }
 
 export interface Event {
@@ -95,6 +107,7 @@ export interface Event {
   max_attendees: number | null;
   image_url: string | null;
   is_public: boolean;
+  recurrence?: string;
   created_at: string;
   creator_profile?: Profile;
   rsvp_count?: number;
@@ -113,6 +126,7 @@ export interface HelpPost {
   longitude: number | null;
   location_name: string | null;
   is_resolved: boolean;
+  is_urgent?: boolean;
   created_at: string;
   poster_profile?: Profile;
   distance_miles?: number;
