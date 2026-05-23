@@ -5,12 +5,77 @@ import { Profile } from "@/types";
 import { calculateAge } from "@/lib/utils";
 import { getInterestById, RELATIONSHIP_INTENTIONS, WORK_FIELDS } from "@/lib/interests";
 import { WANTS, getWantById } from "@/lib/wants";
+import { PROMPTS, ProfilePrompt, getPrompt } from "@/lib/prompts";
 import { InterestPicker } from "@/components/profile/interest-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Edit3, Crown, Camera, Eye, EyeOff, PauseCircle, PlayCircle, Images } from "lucide-react";
+import {
+  LogOut, Edit3, Crown, Camera, Eye, EyeOff, PauseCircle, PlayCircle,
+  Images, MessageSquare, SlidersHorizontal, Trash2, Plus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+// ─── Dating detail options ─────────────────────────────────────────────────
+const HAS_KIDS_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "no", label: "No kids" },
+  { value: "yes", label: "Have kids" },
+  { value: "step", label: "Have stepkids" },
+];
+const WANTS_KIDS_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+  { value: "open", label: "Open to it" },
+];
+const RELATIONSHIP_STYLE_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "monogamous", label: "Monogamous" },
+  { value: "open", label: "Open/ENM" },
+  { value: "figuring", label: "Still figuring out" },
+];
+const DRINKING_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "never", label: "Never" },
+  { value: "rarely", label: "Rarely" },
+  { value: "socially", label: "Socially" },
+  { value: "regularly", label: "Regularly" },
+];
+const SMOKING_OPTIONS = [
+  { value: "", label: "Prefer not to say" },
+  { value: "never", label: "Never" },
+  { value: "socially", label: "Socially" },
+  { value: "yes", label: "Yes" },
+];
+
+// ─── Shared detail select ──────────────────────────────────────────────────
+function DetailSelect({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-700 block mb-1.5">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -18,7 +83,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "wants" | "privacy">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "wants" | "privacy" | "prompts" | "details">("profile");
 
   // Edit form state
   const [bio, setBio] = useState("");
@@ -33,6 +98,16 @@ export default function ProfilePage() {
   const [showAge, setShowAge] = useState(true);
   const [hideDistance, setHideDistance] = useState(false);
   const [profilePaused, setProfilePaused] = useState(false);
+
+  // Prompts state
+  const [profilePrompts, setProfilePrompts] = useState<ProfilePrompt[]>([]);
+
+  // Dating details state
+  const [hasKids, setHasKids] = useState("");
+  const [wantsKids, setWantsKids] = useState("");
+  const [relationshipStyle, setRelationshipStyle] = useState("");
+  const [drinking, setDrinking] = useState("");
+  const [smoking, setSmoking] = useState("");
 
   useEffect(() => {
     loadProfile();
@@ -56,6 +131,12 @@ export default function ProfilePage() {
       setShowAge(data.show_age !== false);
       setHideDistance(data.hide_distance === true);
       setProfilePaused(data.profile_paused === true);
+      setProfilePrompts(Array.isArray(data.profile_prompts) ? data.profile_prompts : []);
+      setHasKids(data.has_kids || "");
+      setWantsKids(data.wants_kids || "");
+      setRelationshipStyle(data.relationship_style || "");
+      setDrinking(data.drinking || "");
+      setSmoking(data.smoking || "");
     }
     setLoading(false);
   };
@@ -75,6 +156,7 @@ export default function ProfilePage() {
       show_age: showAge,
       hide_distance: hideDistance,
       profile_paused: profilePaused,
+      profile_prompts: profilePrompts,
     }).eq("user_id", profile.user_id);
     await loadProfile();
     setSaving(false);
@@ -93,6 +175,30 @@ export default function ProfilePage() {
     setSaving(false);
   };
 
+  const savePrompts = async () => {
+    if (!profile) return;
+    setSaving(true);
+    const supabase = createClient();
+    await supabase.from("profiles").update({
+      profile_prompts: profilePrompts,
+    }).eq("user_id", profile.user_id);
+    setSaving(false);
+  };
+
+  const saveDetails = async () => {
+    if (!profile) return;
+    setSaving(true);
+    const supabase = createClient();
+    await supabase.from("profiles").update({
+      has_kids: hasKids || null,
+      wants_kids: wantsKids || null,
+      relationship_style: relationshipStyle || null,
+      drinking: drinking || null,
+      smoking: smoking || null,
+    }).eq("user_id", profile.user_id);
+    setSaving(false);
+  };
+
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -102,6 +208,32 @@ export default function ProfilePage() {
   const toggleWant = (id: string) => {
     setWants((prev) =>
       prev.includes(id) ? prev.filter((w) => w !== id) : prev.length < 10 ? [...prev, id] : prev
+    );
+  };
+
+  // ─── Prompt helpers ────────────────────────────────────────────────────────
+  const addPromptSlot = () => {
+    if (profilePrompts.length >= 3) return;
+    // Pick the first prompt not already used
+    const usedIds = new Set(profilePrompts.map((p) => p.id));
+    const first = PROMPTS.find((p) => !usedIds.has(p.id));
+    if (!first) return;
+    setProfilePrompts((prev) => [...prev, { id: first.id, answer: "" }]);
+  };
+
+  const removePromptSlot = (idx: number) => {
+    setProfilePrompts((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updatePromptId = (idx: number, newId: string) => {
+    setProfilePrompts((prev) =>
+      prev.map((p, i) => (i === idx ? { ...p, id: newId } : p))
+    );
+  };
+
+  const updatePromptAnswer = (idx: number, answer: string) => {
+    setProfilePrompts((prev) =>
+      prev.map((p, i) => (i === idx ? { ...p, answer } : p))
     );
   };
 
@@ -225,22 +357,28 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
         {([
           { id: "profile", label: "Profile" },
           { id: "wants", label: "What I want" },
+          { id: "prompts", label: "Prompts", icon: MessageSquare },
+          { id: "details", label: "Details", icon: SlidersHorizontal },
           { id: "privacy", label: "Privacy" },
-        ] as const).map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id)}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${
-              activeTab === t.id ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        ] as const).map((t) => {
+          const Icon = "icon" in t ? t.icon : null;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex-shrink-0 flex items-center gap-1 py-2 px-3 rounded-full text-sm font-semibold transition-colors ${
+                activeTab === t.id ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {Icon && <Icon className="w-3.5 h-3.5" />}
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Profile edit tab */}
@@ -348,6 +486,118 @@ export default function ProfilePage() {
             <span className="text-xs text-gray-400">{wants.length}/10 selected</span>
             <Button onClick={save} loading={saving} size="sm">Save</Button>
           </div>
+        </div>
+      )}
+
+      {/* Prompts tab */}
+      {activeTab === "prompts" && (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4">
+          <h2 className="font-bold text-gray-900 mb-1">Conversation prompts</h2>
+          <p className="text-xs text-gray-400 mb-5">Pick up to 3 prompts and write an answer. Others will see these on your profile.</p>
+
+          <div className="space-y-5">
+            {profilePrompts.map((pp, idx) => {
+              const usedIds = new Set(profilePrompts.map((p) => p.id));
+              const availablePrompts = PROMPTS.filter((p) => p.id === pp.id || !usedIds.has(p.id));
+              const currentPrompt = getPrompt(pp.id);
+              const charCount = pp.answer.length;
+
+              return (
+                <div key={idx} className="rounded-2xl border border-gray-200 p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <select
+                      value={pp.id}
+                      onChange={(e) => updatePromptId(idx, e.target.value)}
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition text-sm"
+                    >
+                      {currentPrompt && !availablePrompts.find((p) => p.id === pp.id) && (
+                        <option value={pp.id}>{currentPrompt.question}</option>
+                      )}
+                      {availablePrompts.map((p) => (
+                        <option key={p.id} value={p.id}>{p.question}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => removePromptSlot(idx)}
+                      className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div>
+                    <textarea
+                      rows={3}
+                      value={pp.answer}
+                      onChange={(e) => updatePromptAnswer(idx, e.target.value.slice(0, 150))}
+                      maxLength={150}
+                      placeholder="Your answer..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition resize-none text-sm"
+                    />
+                    <p className={`text-right text-xs mt-1 ${charCount >= 140 ? "text-amber-500" : "text-gray-400"}`}>
+                      {charCount}/150
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {profilePrompts.length < 3 && (
+            <button
+              onClick={addPromptSlot}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition"
+            >
+              <Plus className="w-4 h-4" />
+              Add prompt
+            </button>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <Button onClick={savePrompts} loading={saving} size="sm">Save prompts</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Details tab */}
+      {activeTab === "details" && (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-4 space-y-5">
+          <div>
+            <h2 className="font-bold text-gray-900 mb-1">Dating details</h2>
+            <p className="text-xs text-gray-400 mb-2">These appear on your profile to help people know if you&apos;re compatible. All optional.</p>
+          </div>
+
+          <DetailSelect
+            label="Kids"
+            value={hasKids}
+            onChange={setHasKids}
+            options={HAS_KIDS_OPTIONS}
+          />
+          <DetailSelect
+            label="Want kids"
+            value={wantsKids}
+            onChange={setWantsKids}
+            options={WANTS_KIDS_OPTIONS}
+          />
+          <DetailSelect
+            label="Relationship style"
+            value={relationshipStyle}
+            onChange={setRelationshipStyle}
+            options={RELATIONSHIP_STYLE_OPTIONS}
+          />
+          <DetailSelect
+            label="Drinking"
+            value={drinking}
+            onChange={setDrinking}
+            options={DRINKING_OPTIONS}
+          />
+          <DetailSelect
+            label="Smoking"
+            value={smoking}
+            onChange={setSmoking}
+            options={SMOKING_OPTIONS}
+          />
+
+          <Button onClick={saveDetails} loading={saving} className="w-full mt-2">Save details</Button>
         </div>
       )}
 

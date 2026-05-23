@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart } from "lucide-react";
+import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart, MessageSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DiscoverProfile } from "@/types";
 import { getInterestById } from "@/lib/interests";
@@ -11,7 +11,32 @@ import { ReportModal } from "@/components/ui/report-modal";
 import { PushPrompt } from "@/components/push-prompt";
 import { ProfileCompletion } from "@/components/profile-completion";
 import type { ConnectionMode } from "@/lib/modes";
+import { getPrompt } from "@/lib/prompts";
 import Link from "next/link";
+
+// ─── Active badge helper ────────────────────────────────────────────────────
+function ActiveBadge({ lastActiveAt }: { lastActiveAt: string | null }) {
+  if (!lastActiveAt) return null;
+  const diffMs = Date.now() - new Date(lastActiveAt).getTime();
+  const diffHours = diffMs / 3_600_000;
+  if (diffHours < 24) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+        Today
+      </span>
+    );
+  }
+  if (diffHours < 168) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+        This week
+      </span>
+    );
+  }
+  return null;
+}
 
 type SortDir = "smart" | "closest" | "furthest";
 
@@ -410,6 +435,34 @@ export default function DiscoverPage() {
                 </div>
               )}
 
+              {/* Active badge in drawer */}
+              {selected.last_active_at && (
+                <div className="flex items-center gap-2">
+                  <ActiveBadge lastActiveAt={selected.last_active_at} />
+                </div>
+              )}
+
+              {/* Profile prompts / conversation starters */}
+              {selected.profile_prompts && selected.profile_prompts.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <MessageSquare className="w-3 h-3" /> Conversation starters
+                  </p>
+                  <div className="space-y-2">
+                    {selected.profile_prompts.map((pp, idx) => {
+                      const prompt = getPrompt(pp.id);
+                      if (!prompt || !pp.answer) return null;
+                      return (
+                        <div key={idx} className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                          <p className="text-xs text-gray-400 mb-1">{prompt.question}</p>
+                          <p className="text-sm font-semibold text-gray-900">{pp.answer}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <button
@@ -554,7 +607,7 @@ export default function DiscoverPage() {
                     {!liked && p.compatibility_score >= 30 && (
                       <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-500 rounded-full px-2 py-0.5">
                         <Zap className="w-2.5 h-2.5 text-white" />
-                        <span className="text-[10px] font-bold text-white">{p.compatibility_score}%</span>
+                        <span className="text-[10px] font-bold text-white">{p.compatibility_score}% match</span>
                       </div>
                     )}
 
@@ -593,6 +646,7 @@ export default function DiscoverPage() {
                           {sharedWants} shared goal{sharedWants > 1 ? "s" : ""}
                         </span>
                       )}
+                      <ActiveBadge lastActiveAt={p.last_active_at} />
                     </div>
                   </div>
                 </button>

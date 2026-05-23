@@ -5,6 +5,7 @@ import { Message, Profile } from "@/types";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { Send, ArrowLeft, Clock } from "lucide-react";
 import Link from "next/link";
+import { ProfilePrompt, getPrompt } from "@/lib/prompts";
 
 function hoursLeft(expiresAt: string): string {
   const diff = new Date(expiresAt).getTime() - Date.now();
@@ -14,7 +15,7 @@ function hoursLeft(expiresAt: string): string {
   return `${h}h ${m}m`;
 }
 
-// Conversation starters for empty chats
+// Fallback generic conversation starters
 const ICEBREAKERS = [
   "What's something you've been really into lately?",
   "If you could teleport anywhere right now, where would you go?",
@@ -27,6 +28,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
   const { matchId } = use(params);
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherProfile, setOtherProfile] = useState<Profile | null>(null);
+  const [otherPrompts, setOtherPrompts] = useState<ProfilePrompt[]>([]);
   const [matchExpiry, setMatchExpiry] = useState<string>("");
   const [isExpired, setIsExpired] = useState(false);
   const [myUserId, setMyUserId] = useState<string>("");
@@ -38,6 +40,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
 
   useEffect(() => {
     loadChat();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
   useEffect(() => {
@@ -58,6 +61,11 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
     const otherId = match.user1_id === user.id ? match.user2_id : match.user1_id;
     const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", otherId).single();
     setOtherProfile(profile);
+
+    // Load other person's prompts for icebreaker cards
+    if (profile && Array.isArray(profile.profile_prompts)) {
+      setOtherPrompts(profile.profile_prompts as ProfilePrompt[]);
+    }
 
     const { data: msgs } = await supabase
       .from("messages")
@@ -94,6 +102,12 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
 
   const sendIcebreaker = (msg: string) => setText(msg);
 
+  const sendPromptIcebreaker = (prompt: ProfilePrompt) => {
+    const p = getPrompt(prompt.id);
+    if (!p) return;
+    setText(`I saw you said "${prompt.answer}" to "${p.question}" — tell me more!`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -102,6 +116,9 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
     );
   }
 
+  // Use prompt-based icebreakers if available, otherwise fall back to generics
+  const hasPrompts = otherPrompts.length > 0;
+
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] max-w-lg mx-auto">
       {/* Chat header */}
@@ -109,6 +126,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
         <Link href="/chat" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Link>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={otherProfile?.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${otherProfile?.user_id}&backgroundColor=d1fae5`}
           alt={otherProfile?.display_name}
@@ -140,18 +158,41 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
             <div className="text-4xl mb-2">💬</div>
             <p className="text-sm font-semibold text-gray-700 mb-1">Break the ice!</p>
             <p className="text-xs text-gray-400 mb-4">You matched with {otherProfile?.display_name}. Say something genuine.</p>
-            <div className="space-y-2 text-left">
-              <p className="text-xs text-gray-400 font-medium text-center mb-2">Try one of these:</p>
-              {ICEBREAKERS.map((msg) => (
-                <button
-                  key={msg}
-                  onClick={() => sendIcebreaker(msg)}
-                  className="w-full text-left text-sm bg-white border border-emerald-100 rounded-xl px-4 py-3 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 transition"
-                >
-                  {msg}
-                </button>
-              ))}
-            </div>
+
+            {hasPrompts ? (
+              <div className="space-y-2 text-left">
+                <p className="text-xs text-gray-400 font-medium text-center mb-2">
+                  Ask about their answers:
+                </p>
+                {otherPrompts.map((pp, idx) => {
+                  const prompt = getPrompt(pp.id);
+                  if (!prompt || !pp.answer) return null;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => sendPromptIcebreaker(pp)}
+                      className="w-full text-left bg-white border border-emerald-100 rounded-xl px-4 py-3 hover:border-emerald-400 hover:bg-emerald-50 transition"
+                    >
+                      <p className="text-[10px] text-gray-400 mb-0.5">{prompt.question}</p>
+                      <p className="text-sm font-semibold text-gray-800">{pp.answer}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-2 text-left">
+                <p className="text-xs text-gray-400 font-medium text-center mb-2">Try one of these:</p>
+                {ICEBREAKERS.map((msg) => (
+                  <button
+                    key={msg}
+                    onClick={() => sendIcebreaker(msg)}
+                    className="w-full text-left text-sm bg-white border border-emerald-100 rounded-xl px-4 py-3 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 transition"
+                  >
+                    {msg}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {isExpired && messages.length === 0 && (
