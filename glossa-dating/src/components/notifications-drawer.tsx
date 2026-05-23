@@ -28,6 +28,7 @@ function kindIcon(kind: string): string {
     case "liked_you": return "❤️";
     case "help_response": return "🤝";
     case "event_rsvp": return "🎉";
+    case "nudge": return "💌";
     default: return "🔔";
   }
 }

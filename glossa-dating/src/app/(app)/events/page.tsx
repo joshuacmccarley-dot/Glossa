@@ -25,19 +25,20 @@ export default function EventsPage() {
   const [distanceMax, setDistanceMax] = useState<number>(Infinity);
   const [sortDir, setSortDir] = useState<SortDir>("soonest");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [recurringOnly, setRecurringOnly] = useState(false);
   const [myUserId, setMyUserId] = useState("");
   const [myName, setMyName] = useState("");
 
   // Create form
   const [form, setForm] = useState({
     title: "", description: "", category: "hangout",
-    location_name: "", starts_at: "", max_attendees: "",
+    location_name: "", starts_at: "", max_attendees: "", recurrence: "once",
   });
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => { load(); }, []);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { applyFilters(events); }, [events, distanceMax, sortDir, activeCategory, myLat]);
+  useEffect(() => { applyFilters(events); }, [events, distanceMax, sortDir, activeCategory, recurringOnly, myLat]);
 
   const load = async () => {
     const supabase = createClient();
@@ -97,6 +98,7 @@ export default function EventsPage() {
     let result = [...evts];
     if (activeCategory !== "all") result = result.filter((e) => e.category === activeCategory);
     if (distanceMax !== Infinity) result = result.filter((e) => (e.distance_miles ?? Infinity) <= distanceMax);
+    if (recurringOnly) result = result.filter((e) => e.recurrence && e.recurrence !== "once");
     result.sort((a, b) =>
       sortDir === "soonest"
         ? new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
@@ -152,8 +154,9 @@ export default function EventsPage() {
       longitude: myLng,
       starts_at: form.starts_at,
       max_attendees: form.max_attendees ? parseInt(form.max_attendees) : null,
+      recurrence: form.recurrence,
     });
-    setForm({ title: "", description: "", category: "hangout", location_name: "", starts_at: "", max_attendees: "" });
+    setForm({ title: "", description: "", category: "hangout", location_name: "", starts_at: "", max_attendees: "", recurrence: "once" });
     setCreating(false);
     setFormLoading(false);
     await load();
@@ -231,6 +234,19 @@ export default function EventsPage() {
             </div>
           </div>
           <div>
+            <label className="text-xs text-gray-500 block mb-1">Recurrence</label>
+            <select
+              value={form.recurrence}
+              onChange={(e) => setForm({ ...form, recurrence: e.target.value })}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-amber-400 focus:outline-none bg-white"
+            >
+              <option value="once">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Every two weeks</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <div>
             <label className="text-xs text-gray-500 block mb-1">Category</label>
             <div className="flex flex-wrap gap-1.5">
               {EVENT_CATEGORIES.map((c) => (
@@ -302,6 +318,16 @@ export default function EventsPage() {
         </button>
       </div>
 
+      {/* Recurring-only filter chip */}
+      <div className="mb-4">
+        <button
+          onClick={() => setRecurringOnly((v) => !v)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${recurringOnly ? "bg-purple-500 text-white" : "bg-gray-100 text-gray-600"}`}
+        >
+          🔁 Recurring only
+        </button>
+      </div>
+
       {/* Events list */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
@@ -332,6 +358,11 @@ export default function EventsPage() {
                     <p className="font-bold text-gray-900 truncate">{evt.title}</p>
                     <p className="text-xs text-amber-600 font-medium">{cat?.label || "Event"}</p>
                   </div>
+                  {evt.recurrence && evt.recurrence !== "once" && (
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                      🔁 {evt.recurrence === "weekly" ? "Weekly" : evt.recurrence === "biweekly" ? "Biweekly" : "Monthly"}
+                    </span>
+                  )}
                   {isCreator && (
                     <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Yours</span>
                   )}

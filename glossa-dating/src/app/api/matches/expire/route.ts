@@ -67,8 +67,48 @@ export async function POST(req: NextRequest) {
       .in("id", expiring.map((m) => m.id));
   }
 
+  // Anti-ghost nudge: matches 5-7 hours old with 0 messages and nudge_sent_at is null
+  const fiveHoursAgo = new Date(now.getTime() - 5 * 3600000).toISOString();
+  const sevenHoursAgo = new Date(now.getTime() - 7 * 3600000).toISOString();
+
+  const { data: quietMatches } = await supabase
+    .from("matches")
+    .select("id, user1_id, user2_id, created_at")
+    .eq("is_expired", false)
+    .is("nudge_sent_at", null)
+    .gte("created_at", sevenHoursAgo)
+    .lte("created_at", fiveHoursAgo);
+
+  for (const match of quietMatches ?? []) {
+    // Check if truly 0 messages
+    const { count } = await supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("match_id", match.id);
+
+    if ((count ?? 0) > 0) continue; // already chatting, skip
+
+    // Fetch names
+    const [{ data: p1 }, { data: p2 }] = await Promise.all([
+      supabase.from("profiles").select("display_name").eq("user_id", match.user1_id).single(),
+      supabase.from("profiles").select("display_name").eq("user_id", match.user2_id).single(),
+    ]);
+    const name1 = (p1 as { display_name: string } | null)?.display_name ?? "your match";
+    const name2 = (p2 as { display_name: string } | null)?.display_name ?? "your match";
+
+    // Send nudge notifications to both users
+    await supabase.from("notifications").insert([
+      { user_id: match.user1_id, kind: "nudge", title: `Don't let it slip away 💚`, body: `You matched with ${name2} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
+      { user_id: match.user2_id, kind: "nudge", title: `Don't let it slip away 💚`, body: `You matched with ${name1} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
+    ]);
+
+    // Mark nudge sent
+    await supabase.from("matches").update({ nudge_sent_at: now.toISOString() }).eq("id", match.id);
+  }
+
   return NextResponse.json({
     expired: expiredMatches?.length ?? 0,
     warned: expiring?.length ?? 0,
+    nudged: quietMatches?.length ?? 0,
   });
 }

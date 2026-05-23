@@ -25,8 +25,12 @@ export default function HelpPage() {
   const [respondingTo, setRespondingTo] = useState<HelpPost | null>(null);
   const [responseText, setResponseText] = useState("");
 
+  // Resolve flow state
+  const [resolvingPost, setResolvingPost] = useState<HelpPost | null>(null);
+  const [resolverName, setResolverName] = useState("");
+
   // Create form
-  const [form, setForm] = useState({ kind: "need" as "need" | "offer", title: "", description: "", category: "other", location_name: "" });
+  const [form, setForm] = useState({ kind: "need" as "need" | "offer", title: "", description: "", category: "other", location_name: "", is_urgent: false });
   const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => { load(); }, []);
@@ -73,7 +77,12 @@ export default function HelpPage() {
     if (activeKind !== "all") result = result.filter((p) => p.kind === activeKind);
     if (activeCategory !== "all") result = result.filter((p) => p.category === activeCategory);
     if (distanceMax !== Infinity) result = result.filter((p) => (p.distance_miles ?? Infinity) <= distanceMax);
-    result.sort((a, b) => (a.distance_miles ?? 9999) - (b.distance_miles ?? 9999));
+    // Urgent posts first, then by distance/time
+    result.sort((a, b) => {
+      if (a.is_urgent && !b.is_urgent) return -1;
+      if (!a.is_urgent && b.is_urgent) return 1;
+      return (a.distance_miles ?? 9999) - (b.distance_miles ?? 9999);
+    });
     setFiltered(result);
   };
 
@@ -92,17 +101,26 @@ export default function HelpPage() {
       location_name: form.location_name.slice(0, 100) || null,
       latitude: myLat,
       longitude: myLng,
+      is_urgent: form.is_urgent,
     });
-    setForm({ kind: "need", title: "", description: "", category: "other", location_name: "" });
+    setForm({ kind: "need", title: "", description: "", category: "other", location_name: "", is_urgent: false });
     setCreating(false);
     setFormLoading(false);
     await load();
   };
 
-  const markResolved = async (postId: string) => {
+  const initiateResolve = (post: HelpPost) => {
+    setResolvingPost(post);
+    setResolverName("");
+  };
+
+  const confirmResolve = async () => {
+    if (!resolvingPost) return;
     const supabase = createClient();
-    await supabase.from("help_posts").update({ is_resolved: true }).eq("id", postId);
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    await supabase.from("help_posts").update({ is_resolved: true }).eq("id", resolvingPost.id);
+    setPosts((prev) => prev.filter((p) => p.id !== resolvingPost.id));
+    setResolvingPost(null);
+    setResolverName("");
   };
 
   const sendResponse = async () => {
@@ -152,6 +170,28 @@ export default function HelpPage() {
         </div>
       )}
 
+      {/* Resolve confirmation modal */}
+      {resolvingPost && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-6 sm:pb-0">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6">
+            <h3 className="font-bold text-gray-900 mb-1">Mark as resolved</h3>
+            <p className="text-sm text-gray-500 mb-4 bg-emerald-50 rounded-xl p-3">{resolvingPost.title}</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">Did someone help you? <span className="text-gray-400 font-normal">(Optional)</span></p>
+            <input
+              placeholder="Responder's name (or leave blank)"
+              value={resolverName}
+              onChange={(e) => setResolverName(e.target.value)}
+              maxLength={80}
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none mb-4"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setResolvingPost(null)} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm font-medium text-gray-500">Cancel</button>
+              <button onClick={confirmResolve} className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl text-sm font-bold">Mark resolved</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="font-black text-xl text-gray-900">Lend a Hand</h1>
@@ -183,6 +223,19 @@ export default function HelpPage() {
               </button>
             ))}
           </div>
+          {/* Urgent toggle */}
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.is_urgent}
+              onChange={(e) => setForm({ ...form, is_urgent: e.target.checked })}
+              className="w-4 h-4 rounded accent-red-500"
+            />
+            <span className={`text-sm font-semibold ${form.is_urgent ? "text-red-600" : "text-gray-500"}`}>
+              {form.is_urgent ? "⚡ Urgent" : "Urgent"}
+            </span>
+            {form.is_urgent && <span className="text-xs text-red-400">(shown prominently to nearby people)</span>}
+          </label>
           <div className="flex gap-2">
             <button onClick={() => setCreating(false)} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-medium text-gray-500">Cancel</button>
             <button onClick={createPost} disabled={formLoading || !form.title || !form.description} className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">
@@ -228,9 +281,14 @@ export default function HelpPage() {
             const cat = getCatInfo(post.category);
             const isOwn = post.user_id === myUserId;
             return (
-              <div key={post.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${post.kind === "need" ? "border-blue-100" : "border-teal-100"}`}>
+              <div key={post.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${post.is_urgent ? "border-red-200 ring-1 ring-red-200" : post.kind === "need" ? "border-blue-100" : "border-teal-100"}`}>
                 <div className={`px-4 py-2.5 flex items-center gap-2 text-xs font-bold ${post.kind === "need" ? "bg-blue-50 text-blue-600" : "bg-teal-50 text-teal-600"}`}>
                   <span>{post.kind === "need" ? "🙋 Needs help" : "🤝 Offering help"}</span>
+                  {post.is_urgent && (
+                    <span className="flex items-center gap-0.5 bg-red-500 text-white px-2 py-0.5 rounded-full font-bold text-[11px]">
+                      ⚡ Urgent
+                    </span>
+                  )}
                   {cat && <span className="ml-auto">{cat.emoji} {cat.label}</span>}
                 </div>
                 <div className="px-4 py-3">
@@ -257,7 +315,7 @@ export default function HelpPage() {
                       </button>
                     )}
                     {isOwn && (
-                      <button onClick={() => markResolved(post.id)} className="flex items-center gap-1.5 flex-1 justify-center bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-100 transition">
+                      <button onClick={() => initiateResolve(post)} className="flex items-center gap-1.5 flex-1 justify-center bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-100 transition">
                         <CheckCircle className="w-3.5 h-3.5" /> Mark resolved
                       </button>
                     )}
