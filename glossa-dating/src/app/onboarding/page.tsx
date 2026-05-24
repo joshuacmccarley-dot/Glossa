@@ -143,7 +143,6 @@ export default function OnboardingPage() {
                       active ? "border-emerald-500 bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
-                    <span className="text-3xl mt-0.5">{m.emoji}</span>
                     <div className="flex-1">
                       <p className={`font-bold text-base ${active ? "text-emerald-700" : "text-gray-900"}`}>{m.label}</p>
                       <p className="text-sm text-gray-500 leading-snug mt-0.5">{m.tagline}</p>
@@ -168,7 +167,7 @@ export default function OnboardingPage() {
                         intention === ri.id ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
                       }`}
                     >
-                      <span>{ri.emoji}</span> {ri.label}
+                      {ri.label}
                       {intention === ri.id && <span className="ml-auto text-emerald-500">✓</span>}
                     </button>
                   ))}
@@ -317,7 +316,7 @@ export default function OnboardingPage() {
                                 : "border-gray-200 text-gray-600 bg-white hover:border-emerald-300"
                             }`}
                           >
-                            {w.emoji} {w.label}
+                            {w.label}
                             {active && <span className="text-white/80">✓</span>}
                           </button>
                         );
@@ -359,7 +358,7 @@ export default function OnboardingPage() {
             </Button>
           ) : (
             <Button onClick={finish} className="flex-1" loading={loading}>
-              {wants.length > 0 ? `I'm ready — let's go 🚀` : "Skip & get started"}
+              {wants.length > 0 ? `I'm ready — let's go` : "Skip & get started"}
             </Button>
           )}
         </div>
