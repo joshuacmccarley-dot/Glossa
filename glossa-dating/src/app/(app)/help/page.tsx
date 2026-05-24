@@ -219,7 +219,7 @@ export default function HelpPage() {
           <div className="flex flex-wrap gap-1.5">
             {HELP_CATEGORIES.map((c) => (
               <button key={c.id} onClick={() => setForm({ ...form, category: c.id })} className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${form.category === c.id ? "border-blue-500 bg-blue-500 text-white" : "border-gray-200 text-gray-600"}`}>
-                {c.emoji} {c.label}
+                {c.label}
               </button>
             ))}
           </div>
@@ -289,7 +289,7 @@ export default function HelpPage() {
                       <Zap className="w-3 h-3" /> Urgent
                     </span>
                   )}
-                  {cat && <span className="ml-auto">{cat.emoji} {cat.label}</span>}
+                  {cat && <span className="ml-auto">{cat.label}</span>}
                 </div>
                 <div className="px-4 py-3">
                   <div className="flex items-start gap-3 mb-2">

@@ -101,7 +101,7 @@ export default function PhotosPage() {
       </button>
 
       <h1 className="text-2xl font-black text-gray-900 mb-1">Your photos</h1>
-      <p className="text-sm text-gray-500 mb-6">Add up to 6 photos. Tap ⭐ to set your primary photo.</p>
+      <p className="text-sm text-gray-500 mb-6">Add up to 6 photos. Tap the star to set your primary photo.</p>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         {photos.map((photo) => (

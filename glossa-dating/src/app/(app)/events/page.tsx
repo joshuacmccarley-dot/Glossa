@@ -256,7 +256,7 @@ export default function EventsPage() {
                   onClick={() => setForm({ ...form, category: c.id })}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${form.category === c.id ? "border-amber-500 bg-amber-500 text-white" : "border-gray-200 text-gray-600"}`}
                 >
-                  {c.emoji} {c.label}
+                  {c.label}
                 </button>
               ))}
             </div>
@@ -293,7 +293,7 @@ export default function EventsPage() {
             onClick={() => setActiveCategory(c.id)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold ${activeCategory === c.id ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-600"}`}
           >
-            {c.emoji} {c.label}
+            {c.label}
           </button>
         ))}
       </div>

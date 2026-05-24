@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Crown, Check, RefreshCw, Heart, Star, Clock, Zap, Shield, X } from "lucide-react";
+import { Crown, Check, RefreshCw, Heart, Star, Clock, Zap, Shield, X, Lock, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 
 const FEATURES = [
@@ -96,7 +96,7 @@ export default function PricingPage() {
         <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-200">
           <Crown className="w-12 h-12 text-white" />
         </div>
-        <h1 className="text-3xl font-black text-gray-900 mb-3">Welcome to Premium 💚</h1>
+        <h1 className="text-3xl font-black text-gray-900 mb-3">Welcome to Premium</h1>
         <p className="text-gray-500 mb-8">Full access, unlimited connections, and every feature we have. Go find your people.</p>
         <Link
           href="/discover"
@@ -162,12 +162,12 @@ export default function PricingPage() {
         {/* Trust signals */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { emoji: "🔒", label: "Secure", sub: "Stripe encrypted" },
-            { emoji: "❌", label: "No lock-in", sub: "Cancel instantly" },
-            { emoji: "💚", label: "Fair price", sub: "6× cheaper than Tinder" },
+            { icon: <Lock className="w-5 h-5 text-gray-600" />, label: "Secure", sub: "Stripe encrypted" },
+            { icon: <Check className="w-5 h-5 text-emerald-500" />, label: "No lock-in", sub: "Cancel instantly" },
+            { icon: <BadgeCheck className="w-5 h-5 text-teal-500" />, label: "Fair price", sub: "6× cheaper than Tinder" },
           ].map((t) => (
             <div key={t.label} className="bg-white rounded-2xl border border-gray-100 p-3 text-center shadow-sm">
-              <div className="text-xl mb-1">{t.emoji}</div>
+              <div className="flex justify-center mb-1">{t.icon}</div>
               <p className="font-bold text-gray-900 text-xs">{t.label}</p>
               <p className="text-[10px] text-gray-400">{t.sub}</p>
             </div>

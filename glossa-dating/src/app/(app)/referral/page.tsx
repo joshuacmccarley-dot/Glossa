@@ -157,7 +157,7 @@ export default function ReferralPage() {
         {claimResult ? (
           claimResult.rewarded ? (
             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-4 text-center">
-              <p className="text-2xl mb-2">🎉</p>
+              <Gift className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
               <p className="font-bold text-emerald-800 text-sm">
                 Reward claimed! You and {claimResult.referrerName} both got 30 days free.
               </p>
