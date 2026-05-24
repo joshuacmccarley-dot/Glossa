@@ -29,7 +29,7 @@ function ConfirmModal({ onClose, onConfirm, loading }: {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 sm:pb-0">
       <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-500 px-6 py-5 text-white">
+        <div className="bg-[#003526] px-6 py-5 text-[#C4A44A]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Crown className="w-5 h-5" />
@@ -41,7 +41,7 @@ function ConfirmModal({ onClose, onConfirm, loading }: {
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-black">$5</span>
-            <span className="text-white/70">/month · cancel anytime</span>
+            <span className="text-[#C4A44A]/70">/month · cancel anytime</span>
           </div>
         </div>
 
@@ -49,7 +49,7 @@ function ConfirmModal({ onClose, onConfirm, loading }: {
         <div className="px-6 py-4 space-y-2.5">
           {FEATURES.slice(0, 4).map((f) => (
             <div key={f.text} className="flex items-center gap-2.5 text-sm text-gray-700">
-              <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 bg-[#FDF6E3] text-[#C4A44A] rounded-full flex items-center justify-center flex-shrink-0">
                 {f.icon}
               </div>
               {f.text}
@@ -65,7 +65,7 @@ function ConfirmModal({ onClose, onConfirm, loading }: {
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold py-4 rounded-2xl text-base shadow-lg shadow-emerald-200 disabled:opacity-60 active:scale-[0.98] transition"
+            className="w-full bg-[#C4A44A] text-[#003526] font-bold py-4 rounded-2xl text-base shadow-lg shadow-[#C4A44A]/30 disabled:opacity-60 active:scale-[0.98] transition"
           >
             {loading ? "Opening checkout..." : "Continue to checkout →"}
           </button>
@@ -93,14 +93,14 @@ export default function PricingPage() {
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
-        <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-200">
+        <div className="w-24 h-24 bg-[#003526] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#003526]/20">
           <Crown className="w-12 h-12 text-white" />
         </div>
         <h1 className="text-3xl font-black text-gray-900 mb-3">Welcome to Premium</h1>
         <p className="text-gray-500 mb-8">Full access, unlimited connections, and every feature we have. Go find your people.</p>
         <Link
           href="/discover"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold px-8 py-4 rounded-full shadow-lg shadow-emerald-200"
+          className="inline-flex items-center gap-2 bg-[#003526] text-[#C4A44A] font-bold px-8 py-4 rounded-full shadow-lg shadow-[#003526]/20"
         >
           <Heart className="w-5 h-5 fill-white" /> Back to discovering
         </Link>
@@ -121,7 +121,7 @@ export default function PricingPage() {
       <div className="max-w-lg mx-auto px-4 py-8">
         {/* Hero */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
+          <div className="w-16 h-16 bg-[#003526] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#003526]/20">
             <Crown className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-black text-gray-900 mb-2">sinc&apos;d Premium</h1>
@@ -130,32 +130,32 @@ export default function PricingPage() {
 
         {/* Price card with emerald glow */}
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-3xl blur-xl opacity-30 scale-95" />
-          <div className="relative bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 rounded-3xl p-7 text-white shadow-2xl">
+          <div className="absolute inset-0 bg-[#003526] rounded-3xl blur-xl opacity-30 scale-95" />
+          <div className="relative bg-[#003526] rounded-3xl p-7 text-[#C4A44A] shadow-2xl">
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-6xl font-black">$5</span>
               <span className="text-white/70 text-lg">/month</span>
             </div>
-            <p className="text-white/70 text-sm mb-7">Cancel any time — no questions asked.</p>
+            <p className="text-[#C4A44A]/70 text-sm mb-7">Cancel any time — no questions asked.</p>
 
             <div className="space-y-3 mb-8">
               {FEATURES.map((f) => (
                 <div key={f.text} className="flex items-center gap-3 text-sm">
-                  <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 bg-[#C4A44A]/20 rounded-full flex items-center justify-center flex-shrink-0">
                     {f.icon}
                   </div>
-                  <span className="text-white/90 font-medium">{f.text}</span>
+                  <span className="text-[#C4A44A]/90 font-medium">{f.text}</span>
                 </div>
               ))}
             </div>
 
             <button
               onClick={() => setShowConfirm(true)}
-              className="w-full bg-white text-emerald-700 font-bold py-4 rounded-2xl text-base hover:bg-emerald-50 transition shadow-lg active:scale-[0.98]"
+              className="w-full bg-[#C4A44A] text-[#003526] font-bold py-4 rounded-2xl text-base hover:bg-[#D4BA70] transition shadow-lg active:scale-[0.98]"
             >
               Get Premium for $5/month
             </button>
-            <p className="text-center text-white/50 text-xs mt-3">Stripe secure checkout · SSL · Cancel anytime</p>
+            <p className="text-center text-[#C4A44A]/50 text-xs mt-3">Stripe secure checkout · SSL · Cancel anytime</p>
           </div>
         </div>
 
@@ -163,8 +163,8 @@ export default function PricingPage() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { icon: <Lock className="w-5 h-5 text-gray-600" />, label: "Secure", sub: "Stripe encrypted" },
-            { icon: <Check className="w-5 h-5 text-emerald-500" />, label: "No lock-in", sub: "Cancel instantly" },
-            { icon: <BadgeCheck className="w-5 h-5 text-teal-500" />, label: "Fair price", sub: "6× cheaper than Tinder" },
+            { icon: <Check className="w-5 h-5 text-[#C4A44A]" />, label: "No lock-in", sub: "Cancel instantly" },
+            { icon: <BadgeCheck className="w-5 h-5 text-[#C4A44A]" />, label: "Fair price", sub: "6× cheaper than Tinder" },
           ].map((t) => (
             <div key={t.label} className="bg-white rounded-2xl border border-gray-100 p-3 text-center shadow-sm">
               <div className="flex justify-center mb-1">{t.icon}</div>
@@ -190,7 +190,7 @@ export default function PricingPage() {
           <div className="space-y-2">
             {FREE_FEATURES.map((f) => (
               <div key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> {f}
+                <Check className="w-3.5 h-3.5 text-[#C4A44A] flex-shrink-0" /> {f}
               </div>
             ))}
           </div>

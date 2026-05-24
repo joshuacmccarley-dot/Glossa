@@ -175,18 +175,18 @@ export default function HelpPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4 pb-6 sm:pb-0">
           <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-6">
             <h3 className="font-bold text-gray-900 mb-1">Mark as resolved</h3>
-            <p className="text-sm text-gray-500 mb-4 bg-emerald-50 rounded-xl p-3">{resolvingPost.title}</p>
+            <p className="text-sm text-gray-500 mb-4 bg-[#FDF6E3] rounded-xl p-3">{resolvingPost.title}</p>
             <p className="text-sm font-medium text-gray-700 mb-2">Did someone help you? <span className="text-gray-400 font-normal">(Optional)</span></p>
             <input
               placeholder="Responder's name (or leave blank)"
               value={resolverName}
               onChange={(e) => setResolverName(e.target.value)}
               maxLength={80}
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none mb-4"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:border-[#C4A44A] focus:outline-none mb-4"
             />
             <div className="flex gap-2">
               <button onClick={() => setResolvingPost(null)} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm font-medium text-gray-500">Cancel</button>
-              <button onClick={confirmResolve} className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-3 rounded-xl text-sm font-bold">Mark resolved</button>
+              <button onClick={confirmResolve} className="flex-1 bg-[#003526] text-[#C4A44A] py-3 rounded-xl text-sm font-bold">Mark resolved</button>
             </div>
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function HelpPage() {
                       </button>
                     )}
                     {isOwn && (
-                      <button onClick={() => initiateResolve(post)} className="flex items-center gap-1.5 flex-1 justify-center bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-100 transition">
+                      <button onClick={() => initiateResolve(post)} className="flex items-center gap-1.5 flex-1 justify-center bg-[#FDF6E3] border border-[#C4A44A] text-[#003526] py-2.5 rounded-xl text-xs font-bold hover:bg-[#C4A44A]/20 transition">
                         <CheckCircle className="w-3.5 h-3.5" /> Mark resolved
                       </button>
                     )}

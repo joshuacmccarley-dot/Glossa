@@ -110,7 +110,7 @@ export default function MatchesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#C4A44A]/30 border-t-[#C4A44A] rounded-full animate-spin" />
       </div>
     );
   }
@@ -139,10 +139,10 @@ export default function MatchesPage() {
         <div className="space-y-3">
           {activeMatches.length === 0 ? (
             <div className="text-center py-16">
-              <Heart className="w-12 h-12 text-emerald-200 mx-auto mb-3" />
+              <Heart className="w-12 h-12 text-[#C4A44A]/40 mx-auto mb-3" />
               <p className="font-semibold text-gray-900">No active matches yet</p>
               <p className="text-gray-500 text-sm mt-1">Keep discovering to find your sinc</p>
-              <Link href="/discover" className="inline-block mt-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-3 rounded-full font-semibold text-sm">
+              <Link href="/discover" className="inline-block mt-4 bg-[#003526] text-[#C4A44A] px-6 py-3 rounded-full font-semibold text-sm">
                 Go discover
               </Link>
             </div>
@@ -153,7 +153,7 @@ export default function MatchesPage() {
                   <img
                     src={m.profile?.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${m.profile?.user_id}&backgroundColor=d1fae5`}
                     alt={m.profile?.display_name}
-                    className="w-14 h-14 rounded-2xl object-cover bg-emerald-100"
+                    className="w-14 h-14 rounded-2xl object-cover bg-[#FDF6E3]"
                   />
                   {m.isUrgent && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
@@ -164,7 +164,7 @@ export default function MatchesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="font-bold text-gray-900">{m.profile?.display_name}, {m.profile && calculateAge(m.profile.birthdate)}</p>
-                    <div className={`flex items-center gap-1 text-xs font-semibold ${m.isUrgent ? "text-amber-500" : "text-emerald-600"}`}>
+                    <div className={`flex items-center gap-1 text-xs font-semibold ${m.isUrgent ? "text-amber-500" : "text-[#003526]"}`}>
                       <Clock className="w-3 h-3" />
                       {m.hoursLeft}h {m.minutesLeft}m
                     </div>
@@ -172,7 +172,7 @@ export default function MatchesPage() {
                   {m.last_message ? (
                     <p className="text-sm text-gray-500 truncate mt-0.5">{m.last_message.content}</p>
                   ) : (
-                    <p className="text-sm text-emerald-600 font-medium mt-0.5">Say something first!</p>
+                    <p className="text-sm text-[#003526] font-medium mt-0.5">Say something first!</p>
                   )}
                 </div>
                 <MessageCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
@@ -185,10 +185,10 @@ export default function MatchesPage() {
       {tab === "expired" && (
         <div className="space-y-3">
           {!isPremium && (
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-5 text-white mb-4">
+            <div className="bg-[#003526] rounded-2xl p-5 text-[#C4A44A] mb-4">
               <p className="font-bold mb-1">Recover your expired matches</p>
-              <p className="text-sm text-white/80 mb-3">With sinc&apos;d Premium you can revive any expired match for just $5/month.</p>
-              <Link href="/pricing" className="inline-block bg-white text-emerald-700 font-bold px-4 py-2 rounded-full text-sm">
+              <p className="text-sm text-[#C4A44A]/70 mb-3">With sinc&apos;d Premium you can revive any expired match for just $5/month.</p>
+              <Link href="/pricing" className="inline-block bg-[#C4A44A] text-[#003526] font-bold px-4 py-2 rounded-full text-sm">
                 Upgrade for $5/mo
               </Link>
             </div>
@@ -213,7 +213,7 @@ export default function MatchesPage() {
                   <button
                     onClick={() => recoverMatch(m.id)}
                     disabled={recovering === m.id}
-                    className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-emerald-100 transition"
+                    className="flex items-center gap-1.5 bg-[#FDF6E3] text-[#003526] border border-[#C4A44A] px-3 py-2 rounded-xl text-xs font-semibold hover:bg-[#C4A44A]/20 transition"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${recovering === m.id ? "animate-spin" : ""}`} />
                     Recover
