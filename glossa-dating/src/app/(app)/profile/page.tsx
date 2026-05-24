@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   LogOut, Edit3, Crown, Camera, Eye, EyeOff, PauseCircle, PlayCircle,
-  Images, MessageSquare, SlidersHorizontal, Trash2, Plus,
+  Images, MessageSquare, SlidersHorizontal, Trash2, Plus, MapPin, Briefcase, Gift,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -255,7 +255,7 @@ export default function ProfilePage() {
     <div className="max-w-lg mx-auto px-4 py-6 pb-8">
       {/* Premium banner */}
       <Link href="/referral" className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:border-emerald-200 transition-colors">
-        <span className="text-xl">🎁</span>
+        <Gift className="w-5 h-5 text-emerald-600 flex-shrink-0" />
         <div className="flex-1">
           <p className="font-semibold text-gray-900 text-sm">Refer a friend — get 30 days free</p>
           <p className="text-xs text-gray-400">Both of you get Premium at no cost</p>
@@ -313,9 +313,9 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-black text-gray-900">
             {profile.display_name}{showAge && age ? `, ${age}` : ""}
           </h1>
-          {profile.location && <p className="text-gray-500 text-sm mt-0.5">📍 {profile.location}</p>}
-          {profile.occupation && <p className="text-gray-500 text-sm">💼 {profile.occupation}{workLabel ? ` · ${workLabel.emoji} ${workLabel.label}` : ""}</p>}
-          {intentionLabel && <p className="text-emerald-600 text-sm font-medium mt-1">{intentionLabel.emoji} {intentionLabel.label}</p>}
+          {profile.location && <p className="text-gray-500 text-sm mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3 inline" /> {profile.location}</p>}
+          {profile.occupation && <p className="text-gray-500 text-sm flex items-center gap-1"><Briefcase className="w-3 h-3 inline" /> {profile.occupation}{workLabel ? ` · ${workLabel.label}` : ""}</p>}
+          {intentionLabel && <p className="text-emerald-600 text-sm font-medium mt-1">{intentionLabel.label}</p>}
           {profile.bio && <p className="text-gray-600 text-sm mt-3 leading-relaxed">{profile.bio}</p>}
 
           {profile.interests && profile.interests.length > 0 && (
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                 if (!interest) return null;
                 return (
                   <span key={id} className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs px-3 py-1.5 rounded-full font-medium">
-                    {interest.emoji} {interest.label}
+                    {interest.label}
                   </span>
                 );
               })}
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                 if (!want) return null;
                 return (
                   <span key={id} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full font-medium">
-                    {want.emoji} {want.label}
+                    {want.label}
                   </span>
                 );
               })}
@@ -409,7 +409,7 @@ export default function ProfilePage() {
                   onClick={() => setWorkField(workField === wf.id ? "" : wf.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${workField === wf.id ? "bg-emerald-500 text-white border-emerald-500" : "border-gray-200 text-gray-600"}`}
                 >
-                  {wf.emoji} {wf.label}
+                  {wf.label}
                 </button>
               ))}
             </div>
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                   onClick={() => setIntention(ri.id)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm text-left transition ${intention === ri.id ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"}`}
                 >
-                  <span>{ri.emoji}</span> {ri.label}
+                  {ri.label}
                   {intention === ri.id && <span className="ml-auto text-emerald-500">✓</span>}
                 </button>
               ))}
@@ -458,7 +458,7 @@ export default function ProfilePage() {
           <div className="space-y-5">
             {(["dating", "events", "help", "community"] as const).map((mode) => {
               const modeWants = WANTS.filter((w) => w.mode === mode);
-              const modeLabels: Record<string, string> = { dating: "💍 Dating", events: "🎉 Events", help: "🤝 Lend a Hand", community: "🏘️ Community" };
+              const modeLabels: Record<string, string> = { dating: "Dating", events: "Events", help: "Lend a Hand", community: "Community" };
               return (
                 <div key={mode}>
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">{modeLabels[mode]}</h3>
@@ -474,7 +474,7 @@ export default function ProfilePage() {
                             : "border-gray-200 text-gray-600 hover:border-emerald-300"
                         }`}
                       >
-                        {w.emoji} {w.label}
+                        {w.label}
                       </button>
                     ))}
                   </div>

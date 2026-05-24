@@ -98,8 +98,8 @@ export async function POST(req: NextRequest) {
 
     // Send nudge notifications to both users
     await supabase.from("notifications").insert([
-      { user_id: match.user1_id, kind: "nudge", title: `Don't let it slip away 💚`, body: `You matched with ${name2} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
-      { user_id: match.user2_id, kind: "nudge", title: `Don't let it slip away 💚`, body: `You matched with ${name1} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
+      { user_id: match.user1_id, kind: "nudge", title: `Don't let it slip away`, body: `You matched with ${name2} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
+      { user_id: match.user2_id, kind: "nudge", title: `Don't let it slip away`, body: `You matched with ${name1} — 5 hours left to say hi!`, action_url: `/chat/${match.id}` },
     ]);
 
     // Mark nudge sent

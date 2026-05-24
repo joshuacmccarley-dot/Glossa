@@ -491,7 +491,7 @@ export default function DiscoverPage() {
           onClick={() => handleFilterChange(() => setActiveMode("all"))}
           className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === "all" ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
         >
-          🌐 All
+          All
         </button>
         {MODES.map((m) => (
           <button
@@ -499,7 +499,7 @@ export default function DiscoverPage() {
             onClick={() => handleFilterChange(() => setActiveMode(m.id))}
             className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === m.id ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
           >
-            {m.emoji} {m.label}
+            {m.label}
           </button>
         ))}
       </div>
@@ -556,7 +556,7 @@ export default function DiscoverPage() {
       {/* Grid */}
       {profiles.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-5xl mb-4">🌿</div>
+          <div className="flex justify-center mb-4"><Leaf className="w-12 h-12 text-emerald-200" /></div>
           <p className="font-bold text-gray-900">
             {activeMode !== "all" ? `Nobody in ${getModeById(activeMode)?.label} nearby yet` : "You've seen everyone nearby"}
           </p>
@@ -600,7 +600,7 @@ export default function DiscoverPage() {
 
                     {modeInfo && (
                       <div className="absolute top-2 left-2 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5 text-[10px] text-white font-semibold">
-                        {modeInfo.emoji}
+                        {modeInfo.label}
                       </div>
                     )}
 
@@ -622,22 +622,22 @@ export default function DiscoverPage() {
                         {p.display_name}{p.show_age !== false ? `, ${p.age}` : ""}
                       </p>
                       {p.distance_miles !== undefined && !p.hide_distance && (
-                        <p className="text-white/60 text-[10px]">📍 {formatDistance(p.distance_miles)}</p>
+                        <p className="text-white/60 text-[10px] flex items-center gap-0.5"><MapPin className="w-3 h-3 inline" /> {formatDistance(p.distance_miles)}</p>
                       )}
                       {intention && (
-                        <p className="text-white/70 text-[10px] mt-0.5">{intention.emoji} {intention.label}</p>
+                        <p className="text-white/70 text-[10px] mt-0.5">{intention.label}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="px-3 py-2.5">
-                    {p.occupation && <p className="text-xs text-gray-500 truncate">💼 {p.occupation}</p>}
+                    {p.occupation && <p className="text-xs text-gray-500 truncate flex items-center gap-0.5"><Briefcase className="w-3 h-3 inline flex-shrink-0" /> {p.occupation}</p>}
                     <div className="flex gap-1 mt-1.5 flex-wrap items-center">
                       {(p.interests ?? []).slice(0, 2).map((id) => {
                         const interest = getInterestById(id);
                         return interest ? (
                           <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
-                            {interest.emoji}
+                            {interest.label}
                           </span>
                         ) : null;
                       })}

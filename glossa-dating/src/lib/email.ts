@@ -82,7 +82,7 @@ export async function sendMatchEmail(to: string, userName: string, matchName: st
 export async function sendMatchExpiringEmail(to: string, userName: string, matchName: string, matchId: string, hoursLeft: number) {
   await send(
     to,
-    `⏱️ Your match with ${matchName} expires in ${hoursLeft}h`,
+    `Your match with ${matchName} expires in ${hoursLeft}h`,
     wrap(`
       <div class="header" style="background:linear-gradient(135deg,#d97706,#b45309)"><h1>Time's running out</h1><p>sinc'd</p></div>
       <div class="body">
@@ -102,7 +102,7 @@ export async function sendMatchExpiringEmail(to: string, userName: string, match
 export async function sendHelpResponseEmail(to: string, userName: string, responderName: string, postTitle: string, postId: string) {
   await send(
     to,
-    `🤝 ${responderName} responded to your sinc'd post`,
+    `${responderName} responded to your sinc'd post`,
     wrap(`
       <div class="header"><h1>Someone responded</h1><p>sinc'd · Lend a Hand</p></div>
       <div class="body">
@@ -121,7 +121,7 @@ export async function sendHelpResponseEmail(to: string, userName: string, respon
 export async function sendEventRsvpEmail(to: string, creatorName: string, attendeeName: string, eventTitle: string, eventId: string) {
   await send(
     to,
-    `🎉 ${attendeeName} is going to your event`,
+    `${attendeeName} is going to your event`,
     wrap(`
       <div class="header" style="background:linear-gradient(135deg,#d97706,#ea580c)"><h1>New RSVP!</h1><p>sinc'd · Events</p></div>
       <div class="body">

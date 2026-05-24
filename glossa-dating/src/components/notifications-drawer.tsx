@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Heart, Clock, HandHeart, Calendar, MessageCircle, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeAgo } from "@/lib/utils";
 import Link from "next/link";
@@ -21,15 +21,50 @@ interface NotificationsDrawerProps {
   onClose: () => void;
 }
 
-function kindIcon(kind: string): string {
+function KindIcon({ kind }: { kind: string }) {
   switch (kind) {
-    case "match": return "💚";
-    case "match_expiring": return "⏱️";
-    case "liked_you": return "❤️";
-    case "help_response": return "🤝";
-    case "event_rsvp": return "🎉";
-    case "nudge": return "💌";
-    default: return "🔔";
+    case "match":
+      return (
+        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Heart className="w-4 h-4 text-emerald-600" />
+        </div>
+      );
+    case "match_expiring":
+      return (
+        <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Clock className="w-4 h-4 text-amber-600" />
+        </div>
+      );
+    case "liked_you":
+      return (
+        <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Heart className="w-4 h-4 text-rose-500" />
+        </div>
+      );
+    case "help_response":
+      return (
+        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <HandHeart className="w-4 h-4 text-blue-600" />
+        </div>
+      );
+    case "event_rsvp":
+      return (
+        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Calendar className="w-4 h-4 text-purple-600" />
+        </div>
+      );
+    case "nudge":
+      return (
+        <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <MessageCircle className="w-4 h-4 text-teal-600" />
+        </div>
+      );
+    default:
+      return (
+        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Bell className="w-4 h-4 text-gray-500" />
+        </div>
+      );
   }
 }
 
@@ -110,7 +145,9 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center px-6">
-              <span className="text-4xl mb-3">💚</span>
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <Bell className="w-5 h-5 text-emerald-600" />
+              </div>
               <p className="font-semibold text-gray-700">You&apos;re all caught up</p>
               <p className="text-sm text-gray-400 mt-1">No new notifications</p>
             </div>
@@ -119,7 +156,7 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
               {notifications.map((n) => {
                 const content = (
                   <div className={`flex gap-3 items-start px-5 py-4 ${!n.read ? "bg-gray-50" : ""}`}>
-                    <span className="text-xl flex-shrink-0 mt-0.5">{kindIcon(n.kind)}</span>
+                    <KindIcon kind={n.kind} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 text-sm leading-snug">{n.title}</p>
                       {n.body && (

@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,12 +31,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-emerald-50 to-white">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200 mb-3">
-            <Zap className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-black text-gray-900">sinc&apos;d</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back</p>
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <img src="/logo-mark.svg" alt="sinc'd" className="w-10 h-12 object-contain" />
+          <span className="font-black text-2xl text-gray-900 tracking-tight">sinc&apos;d</span>
         </div>
 
         {/* Form */}

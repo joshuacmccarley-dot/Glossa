@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Shield, X } from "lucide-react";
+import { Shield, X, CheckCircle } from "lucide-react";
 import { REPORT_REASONS } from "@/lib/moderation";
 import type { ReportReason } from "@/lib/moderation";
 import { Button } from "./button";
@@ -55,7 +55,7 @@ export function ReportModal({ reportedId, reportedName, onClose, onBlock }: Repo
 
         {done ? (
           <div className="px-6 py-8 text-center">
-            <div className="text-4xl mb-3">✅</div>
+            <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
             <p className="font-bold text-gray-900 mb-1">Report submitted</p>
             <p className="text-sm text-gray-500 mb-5">Our safety team will review this within 24 hours. Thank you for keeping sinc&apos;d safe.</p>
             <div className="flex gap-2">

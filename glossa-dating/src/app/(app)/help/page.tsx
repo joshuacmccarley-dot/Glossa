@@ -209,7 +209,7 @@ export default function HelpPage() {
           <div className="flex gap-2">
             {(["need", "offer"] as const).map((k) => (
               <button key={k} onClick={() => setForm({ ...form, kind: k })} className={`flex-1 py-3 rounded-xl text-sm font-bold border-2 transition ${form.kind === k ? "border-blue-500 bg-blue-500 text-white" : "border-gray-200 text-gray-600"}`}>
-                {k === "need" ? "🙋 I need help" : "🤝 I can help"}
+                {k === "need" ? "I need help" : "I can help"}
               </button>
             ))}
           </div>
@@ -232,7 +232,7 @@ export default function HelpPage() {
               className="w-4 h-4 rounded accent-red-500"
             />
             <span className={`text-sm font-semibold ${form.is_urgent ? "text-red-600" : "text-gray-500"}`}>
-              {form.is_urgent ? "⚡ Urgent" : "Urgent"}
+              {form.is_urgent ? <><Zap className="w-3 h-3 inline mr-1" />Urgent</> : "Urgent"}
             </span>
             {form.is_urgent && <span className="text-xs text-red-400">(shown prominently to nearby people)</span>}
           </label>
@@ -249,7 +249,7 @@ export default function HelpPage() {
       <div className="flex gap-2 mb-3">
         {(["all", "need", "offer"] as const).map((k) => (
           <button key={k} onClick={() => setActiveKind(k)} className={`px-4 py-2 rounded-xl text-xs font-bold transition ${activeKind === k ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-600"}`}>
-            {k === "all" ? "All" : k === "need" ? "🙋 Needs" : "🤝 Offers"}
+            {k === "all" ? "All" : k === "need" ? "Needs" : "Offers"}
           </button>
         ))}
         <div className="flex gap-1 ml-auto">
