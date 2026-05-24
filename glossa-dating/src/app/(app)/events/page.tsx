@@ -368,7 +368,7 @@ export default function EventsPage() {
                   {canChat && (
                     <Link
                       href={`/events/${evt.id}`}
-                      className="flex items-center gap-1 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full"
+                      className="flex items-center gap-1 bg-[#003526] text-[#C4A44A] text-xs font-bold px-3 py-1.5 rounded-full"
                     >
                       <MessageCircle className="w-3 h-3" />
                       Chat

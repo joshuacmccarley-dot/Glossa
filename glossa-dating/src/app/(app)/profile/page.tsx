@@ -254,8 +254,8 @@ export default function ProfilePage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-8">
       {/* Premium banner */}
-      <Link href="/referral" className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:border-emerald-200 transition-colors">
-        <Gift className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+      <Link href="/referral" className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:border-[#C4A44A] transition-colors">
+        <Gift className="w-5 h-5 text-[#C4A44A] flex-shrink-0" />
         <div className="flex-1">
           <p className="font-semibold text-gray-900 text-sm">Refer a friend — get 30 days free</p>
           <p className="text-xs text-gray-400">Both of you get Premium at no cost</p>
@@ -290,11 +290,11 @@ export default function ProfilePage() {
               <img
                 src={profile.avatar_url || `https://api.dicebear.com/9.x/personas/svg?seed=${profile.id}&backgroundColor=d1fae5`}
                 alt={profile.display_name}
-                className="w-20 h-20 rounded-2xl border-4 border-white object-cover bg-emerald-100 shadow"
+                className="w-20 h-20 rounded-2xl border-4 border-white object-cover bg-[#FDF6E3] shadow"
               />
               <Link
                 href="/profile/photos"
-                className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow"
+                className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#C4A44A] rounded-full flex items-center justify-center shadow"
               >
                 <Camera className="w-3.5 h-3.5 text-white" />
               </Link>
@@ -315,7 +315,7 @@ export default function ProfilePage() {
           </h1>
           {profile.location && <p className="text-gray-500 text-sm mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3 inline" /> {profile.location}</p>}
           {profile.occupation && <p className="text-gray-500 text-sm flex items-center gap-1"><Briefcase className="w-3 h-3 inline" /> {profile.occupation}{workLabel ? ` · ${workLabel.label}` : ""}</p>}
-          {intentionLabel && <p className="text-emerald-600 text-sm font-medium mt-1">{intentionLabel.label}</p>}
+          {intentionLabel && <p className="text-[#003526] text-sm font-medium mt-1">{intentionLabel.label}</p>}
           {profile.bio && <p className="text-gray-600 text-sm mt-3 leading-relaxed">{profile.bio}</p>}
 
           {profile.interests && profile.interests.length > 0 && (
@@ -324,7 +324,7 @@ export default function ProfilePage() {
                 const interest = getInterestById(id);
                 if (!interest) return null;
                 return (
-                  <span key={id} className="flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs px-3 py-1.5 rounded-full font-medium">
+                  <span key={id} className="flex items-center gap-1 bg-[#FDF6E3] text-[#003526] border border-[#C4A44A]/30 text-xs px-3 py-1.5 rounded-full font-medium">
                     {interest.label}
                   </span>
                 );
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                 const want = getWantById(id);
                 if (!want) return null;
                 return (
-                  <span key={id} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 px-2.5 py-1 rounded-full font-medium">
+                  <span key={id} className="text-xs bg-[#FDF6E3] text-[#003526] border border-[#C4A44A]/30 px-2.5 py-1 rounded-full font-medium">
                     {want.label}
                   </span>
                 );
@@ -348,7 +348,7 @@ export default function ProfilePage() {
 
           <Link
             href="/profile/photos"
-            className="mt-4 flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            className="mt-4 flex items-center gap-2 text-sm text-[#003526] hover:text-[#C4A44A] font-medium"
           >
             <Images className="w-4 h-4" />
             Manage photos
@@ -371,7 +371,7 @@ export default function ProfilePage() {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={`flex-shrink-0 flex items-center gap-1 py-2 px-3 rounded-full text-sm font-semibold transition-colors ${
-                activeTab === t.id ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                activeTab === t.id ? "bg-[#003526] text-[#C4A44A]" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {Icon && <Icon className="w-3.5 h-3.5" />}
@@ -392,7 +392,7 @@ export default function ProfilePage() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               maxLength={400}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition resize-none text-sm"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-[#C4A44A] focus:outline-none focus:ring-2 focus:ring-[#C4A44A]/20 transition resize-none text-sm"
               placeholder="Tell people who you actually are..."
             />
           </div>
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                   key={wf.id}
                   type="button"
                   onClick={() => setWorkField(workField === wf.id ? "" : wf.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${workField === wf.id ? "bg-emerald-500 text-white border-emerald-500" : "border-gray-200 text-gray-600"}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${workField === wf.id ? "bg-[#003526] text-[#C4A44A] border-[#003526]" : "border-gray-200 text-gray-600"}`}
                 >
                   {wf.label}
                 </button>
@@ -423,10 +423,10 @@ export default function ProfilePage() {
                   key={ri.id}
                   type="button"
                   onClick={() => setIntention(ri.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm text-left transition ${intention === ri.id ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600"}`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm text-left transition ${intention === ri.id ? "border-[#C4A44A] bg-[#FDF6E3] text-[#003526]" : "border-gray-200 text-gray-600"}`}
                 >
                   {ri.label}
-                  {intention === ri.id && <span className="ml-auto text-emerald-500">✓</span>}
+                  {intention === ri.id && <span className="ml-auto text-[#C4A44A]">✓</span>}
                 </button>
               ))}
             </div>
@@ -470,8 +470,8 @@ export default function ProfilePage() {
                         onClick={() => toggleWant(w.id)}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border transition ${
                           wants.includes(w.id)
-                            ? "bg-emerald-500 text-white border-emerald-500"
-                            : "border-gray-200 text-gray-600 hover:border-emerald-300"
+                            ? "bg-[#003526] text-[#C4A44A] border-[#003526]"
+                            : "border-gray-200 text-gray-600 hover:border-[#C4A44A]"
                         }`}
                       >
                         {w.label}
@@ -508,7 +508,7 @@ export default function ProfilePage() {
                     <select
                       value={pp.id}
                       onChange={(e) => updatePromptId(idx, e.target.value)}
-                      className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition text-sm"
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:border-[#C4A44A] focus:outline-none focus:ring-2 focus:ring-[#C4A44A]/20 transition text-sm"
                     >
                       {currentPrompt && !availablePrompts.find((p) => p.id === pp.id) && (
                         <option value={pp.id}>{currentPrompt.question}</option>
@@ -531,7 +531,7 @@ export default function ProfilePage() {
                       onChange={(e) => updatePromptAnswer(idx, e.target.value.slice(0, 150))}
                       maxLength={150}
                       placeholder="Your answer..."
-                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition resize-none text-sm"
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-[#C4A44A] focus:outline-none focus:ring-2 focus:ring-[#C4A44A]/20 transition resize-none text-sm"
                     />
                     <p className={`text-right text-xs mt-1 ${charCount >= 140 ? "text-amber-500" : "text-gray-400"}`}>
                       {charCount}/150
@@ -545,7 +545,7 @@ export default function ProfilePage() {
           {profilePrompts.length < 3 && (
             <button
               onClick={addPromptSlot}
-              className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-500 hover:border-emerald-300 hover:text-emerald-600 transition"
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-gray-200 text-sm font-semibold text-gray-500 hover:border-[#C4A44A] hover:text-[#003526] transition"
             >
               <Plus className="w-4 h-4" />
               Add prompt
@@ -608,7 +608,7 @@ export default function ProfilePage() {
 
           <div className="flex items-start justify-between gap-4 py-3 border-b border-gray-50">
             <div className="flex items-start gap-3">
-              {showAge ? <Eye className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" /> : <EyeOff className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />}
+              {showAge ? <Eye className="w-5 h-5 text-[#C4A44A] mt-0.5 flex-shrink-0" /> : <EyeOff className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />}
               <div>
                 <p className="font-semibold text-gray-900 text-sm">Show age</p>
                 <p className="text-xs text-gray-400">Your age appears on your profile card</p>
@@ -616,7 +616,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setShowAge((v) => !v)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${showAge ? "bg-emerald-500" : "bg-gray-200"}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${showAge ? "bg-[#C4A44A]" : "bg-gray-200"}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showAge ? "translate-x-6" : "translate-x-1"}`} />
             </button>
@@ -624,7 +624,7 @@ export default function ProfilePage() {
 
           <div className="flex items-start justify-between gap-4 py-3 border-b border-gray-50">
             <div className="flex items-start gap-3">
-              <EyeOff className={`w-5 h-5 mt-0.5 flex-shrink-0 ${hideDistance ? "text-emerald-500" : "text-gray-400"}`} />
+              <EyeOff className={`w-5 h-5 mt-0.5 flex-shrink-0 ${hideDistance ? "text-[#C4A44A]" : "text-gray-400"}`} />
               <div>
                 <p className="font-semibold text-gray-900 text-sm">Hide distance</p>
                 <p className="text-xs text-gray-400">Others won&apos;t see how far away you are</p>
@@ -632,7 +632,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setHideDistance((v) => !v)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${hideDistance ? "bg-emerald-500" : "bg-gray-200"}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${hideDistance ? "bg-[#C4A44A]" : "bg-gray-200"}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${hideDistance ? "translate-x-6" : "translate-x-1"}`} />
             </button>

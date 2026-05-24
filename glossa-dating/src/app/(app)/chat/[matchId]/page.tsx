@@ -111,7 +111,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#C4A44A]/30 border-t-[#C4A44A] rounded-full animate-spin" />
       </div>
     );
   }
@@ -130,12 +130,12 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
         <img
           src={otherProfile?.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${otherProfile?.user_id}&backgroundColor=d1fae5`}
           alt={otherProfile?.display_name}
-          className="w-10 h-10 rounded-xl object-cover bg-emerald-100"
+          className="w-10 h-10 rounded-xl object-cover bg-[#FDF6E3]"
         />
         <div className="flex-1">
           <p className="font-bold text-gray-900 text-sm">{otherProfile?.display_name}</p>
           {!isExpired && matchExpiry && (
-            <div className="flex items-center gap-1 text-xs text-emerald-600">
+            <div className="flex items-center gap-1 text-xs text-[#003526]">
               <Clock className="w-3 h-3" />
               <span>{hoursLeft(matchExpiry)} remaining</span>
             </div>
@@ -155,7 +155,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
         {messages.length === 0 && !isExpired && (
           <div className="text-center py-4">
-            <MessageCircle className="w-10 h-10 text-emerald-200 mx-auto mb-2" />
+            <MessageCircle className="w-10 h-10 text-[#C4A44A]/40 mx-auto mb-2" />
             <p className="text-sm font-semibold text-gray-700 mb-1">Break the ice!</p>
             <p className="text-xs text-gray-400 mb-4">You matched with {otherProfile?.display_name}. Say something genuine.</p>
 
@@ -171,7 +171,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
                     <button
                       key={idx}
                       onClick={() => sendPromptIcebreaker(pp)}
-                      className="w-full text-left bg-white border border-emerald-100 rounded-xl px-4 py-3 hover:border-emerald-400 hover:bg-emerald-50 transition"
+                      className="w-full text-left bg-white border border-[#C4A44A]/20 rounded-xl px-4 py-3 hover:border-[#C4A44A] hover:bg-[#FDF6E3] transition"
                     >
                       <p className="text-[10px] text-gray-400 mb-0.5">{prompt.question}</p>
                       <p className="text-sm font-semibold text-gray-800">{pp.answer}</p>
@@ -186,7 +186,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
                   <button
                     key={msg}
                     onClick={() => sendIcebreaker(msg)}
-                    className="w-full text-left text-sm bg-white border border-emerald-100 rounded-xl px-4 py-3 text-gray-700 hover:border-emerald-400 hover:bg-emerald-50 transition"
+                    className="w-full text-left text-sm bg-white border border-[#C4A44A]/20 rounded-xl px-4 py-3 text-gray-700 hover:border-[#C4A44A] hover:bg-[#FDF6E3] transition"
                   >
                     {msg}
                   </button>
@@ -198,7 +198,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
         {isExpired && messages.length === 0 && (
           <div className="text-center py-10">
             <p className="text-gray-400 text-sm">This match expired before a message was sent.</p>
-            <Link href="/pricing" className="text-sm text-emerald-600 underline mt-2 inline-block">
+            <Link href="/pricing" className="text-sm text-[#003526] underline mt-2 inline-block">
               Upgrade to recover it →
             </Link>
           </div>
@@ -219,12 +219,12 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Say something real..."
-            className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-400/30 transition"
+            className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#C4A44A]/30 transition"
           />
           <button
             onClick={send}
             disabled={!text.trim() || sending}
-            className="w-11 h-11 bg-gradient-to-br from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center shadow-md disabled:opacity-40 active:scale-95 transition-all"
+            className="w-11 h-11 bg-[#003526] rounded-2xl flex items-center justify-center shadow-md disabled:opacity-40 active:scale-95 transition-all"
           >
             <Send className="w-4 h-4 text-white" />
           </button>
@@ -232,7 +232,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
       ) : (
         <div className="px-4 py-4 bg-white border-t border-gray-100 text-center">
           <p className="text-sm text-gray-500 mb-2">This match has expired.</p>
-          <Link href="/pricing" className="text-sm font-semibold text-emerald-600">
+          <Link href="/pricing" className="text-sm font-semibold text-[#003526]">
             Upgrade to recover this match →
           </Link>
         </div>
