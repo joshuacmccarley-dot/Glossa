@@ -12,9 +12,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", loading, children, disabled, ...props }, ref) => {
     const base = "inline-flex items-center justify-center font-semibold rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2";
     const variants = {
-      primary: "bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:from-emerald-700 hover:to-teal-600 focus:ring-emerald-500 shadow-lg hover:shadow-xl",
-      secondary: "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 focus:ring-gray-300 shadow",
-      outline: "border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-500",
+      primary: "bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] focus:ring-[#C4A44A] shadow-lg hover:shadow-xl font-bold",
+      secondary: "bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 focus:ring-[#C4A44A] shadow",
+      outline: "border-2 border-[#C4A44A] text-[#003526] hover:bg-[#FDF6E3] focus:ring-[#C4A44A]",
       ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-300",
       danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
     };

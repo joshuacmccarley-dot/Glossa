@@ -21,16 +21,16 @@ function ActiveBadge({ lastActiveAt }: { lastActiveAt: string | null }) {
   const diffHours = diffMs / 3_600_000;
   if (diffHours < 24) {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#7A6020] bg-[#FDF6E3] border border-[#C4A44A]/40 rounded-full px-2 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#C4A44A] animate-pulse" />
         Today
       </span>
     );
   }
   if (diffHours < 168) {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#7A6020] bg-[#FDF6E3] border border-[#C4A44A]/40 rounded-full px-2 py-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#C4A44A]" />
         This week
       </span>
     );
@@ -273,7 +273,7 @@ export default function DiscoverPage() {
       {matched && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-4 pb-8 sm:pb-0">
           <div className="bg-white rounded-3xl p-8 text-center shadow-2xl w-full max-w-sm">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
+            <div className="w-20 h-20 bg-[#003526] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#003526]/20">
               <Heart className="w-10 h-10 text-white fill-white" />
             </div>
             <h2 className="text-2xl font-black text-gray-900 mb-1">You&apos;re sinc&apos;d!</h2>
