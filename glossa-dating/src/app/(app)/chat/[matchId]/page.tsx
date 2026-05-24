@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Message, Profile } from "@/types";
 import { MessageBubble } from "@/components/chat/message-bubble";
-import { Send, ArrowLeft, Clock } from "lucide-react";
+import { Send, ArrowLeft, Clock, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { ProfilePrompt, getPrompt } from "@/lib/prompts";
 
@@ -147,7 +147,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
       {/* Expiry warning banner */}
       {!isExpired && matchExpiry && parseInt(hoursLeft(matchExpiry)) < 2 && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-700 text-center font-medium">
-          ⏱️ Hurry! Only {hoursLeft(matchExpiry)} left to keep this match alive.
+          <Clock className="w-3.5 h-3.5 inline mr-0.5" />Hurry! Only {hoursLeft(matchExpiry)} left to keep this match alive.
         </div>
       )}
 
@@ -155,7 +155,7 @@ export default function ChatPage({ params }: { params: Promise<{ matchId: string
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
         {messages.length === 0 && !isExpired && (
           <div className="text-center py-4">
-            <div className="text-4xl mb-2">💬</div>
+            <MessageCircle className="w-10 h-10 text-emerald-200 mx-auto mb-2" />
             <p className="text-sm font-semibold text-gray-700 mb-1">Break the ice!</p>
             <p className="text-xs text-gray-400 mb-4">You matched with {otherProfile?.display_name}. Say something genuine.</p>
 

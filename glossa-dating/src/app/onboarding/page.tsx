@@ -93,10 +93,10 @@ export default function OnboardingPage() {
   );
 
   const modeLabels: Record<string, string> = {
-    dating: "💍 Dating",
-    events: "🎉 Events",
-    help: "🤝 Lend a Hand",
-    community: "🏘️ Community",
+    dating: "Dating",
+    events: "Events",
+    help: "Lend a Hand",
+    community: "Community",
   };
 
   return (
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
               className="w-full flex items-center justify-center gap-2 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 font-semibold py-4 rounded-2xl hover:bg-emerald-100 transition disabled:opacity-60"
             >
               <MapPin className="w-4 h-4" />
-              {locating ? "Detecting..." : lat ? "📍 Location detected" : "Use my current location"}
+              {locating ? "Detecting..." : lat ? <><MapPin className="w-4 h-4 inline mr-1" />Location detected</> : "Use my current location"}
             </button>
             <div className="text-center text-gray-400 text-xs">or type it manually</div>
             <Input

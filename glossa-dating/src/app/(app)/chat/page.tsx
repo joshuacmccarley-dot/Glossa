@@ -114,7 +114,7 @@ export default function ChatListPage() {
                   {m.last_message ? (
                     <p className="text-sm text-gray-500 truncate">{m.last_message.content}</p>
                   ) : (
-                    <p className="text-sm text-emerald-600 font-medium">Start the conversation ✨</p>
+                    <p className="text-sm text-emerald-600 font-medium">Start the conversation</p>
                   )}
                 </div>
               </Link>
