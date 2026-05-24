@@ -114,7 +114,7 @@ export default function OnboardingPage() {
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
-              className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i < step ? "bg-emerald-500" : "bg-gray-100"}`}
+              className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i < step ? "bg-[#C4A44A]" : "bg-gray-100"}`}
             />
           ))}
         </div>
@@ -140,14 +140,14 @@ export default function OnboardingPage() {
                     type="button"
                     onClick={() => toggleMode(m.id)}
                     className={`w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all ${
-                      active ? "border-emerald-500 bg-emerald-50" : "border-gray-200 bg-white hover:border-gray-300"
+                      active ? "border-[#C4A44A] bg-[#FDF6E3]" : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
                     <div className="flex-1">
-                      <p className={`font-bold text-base ${active ? "text-emerald-700" : "text-gray-900"}`}>{m.label}</p>
+                      <p className={`font-bold text-base ${active ? "text-[#003526]" : "text-gray-900"}`}>{m.label}</p>
                       <p className="text-sm text-gray-500 leading-snug mt-0.5">{m.tagline}</p>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${active ? "border-emerald-500 bg-emerald-500" : "border-gray-300"}`}>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition ${active ? "border-[#C4A44A] bg-[#C4A44A]" : "border-gray-300"}`}>
                       {active && <span className="text-white text-[10px] font-black">✓</span>}
                     </div>
                   </button>
@@ -164,11 +164,11 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => setIntention(ri.id)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm text-left transition ${
-                        intention === ri.id ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+                        intention === ri.id ? "border-[#C4A44A] bg-[#FDF6E3] text-[#003526]" : "border-gray-200 text-gray-600 hover:border-gray-300"
                       }`}
                     >
                       {ri.label}
-                      {intention === ri.id && <span className="ml-auto text-emerald-500">✓</span>}
+                      {intention === ri.id && <span className="ml-auto text-[#003526]">✓</span>}
                     </button>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                     type="button"
                     onClick={() => setGender(g)}
                     className={`px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
-                      gender === g ? "border-emerald-500 bg-emerald-500 text-white" : "border-gray-200 text-gray-600 hover:border-emerald-300"
+                      gender === g ? "border-[#C4A44A] bg-[#C4A44A] text-[#003526]" : "border-gray-200 text-gray-600 hover:border-[#C4A44A]/50"
                     }`}
                   >
                     {g}
@@ -312,8 +312,8 @@ export default function OnboardingPage() {
                             onClick={() => toggleWant(w.id)}
                             className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border transition ${
                               active
-                                ? "bg-emerald-500 text-white border-emerald-500"
-                                : "border-gray-200 text-gray-600 bg-white hover:border-emerald-300"
+                                ? "bg-[#003526] text-[#C4A44A] border-[#003526]"
+                                : "border-gray-200 text-gray-600 bg-white hover:border-[#C4A44A]/50"
                             }`}
                           >
                             {w.label}

@@ -497,7 +497,7 @@ export default function DiscoverPage() {
           <button
             key={m.id}
             onClick={() => handleFilterChange(() => setActiveMode(m.id))}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === m.id ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === m.id ? "bg-[#003526] text-[#C4A44A] shadow" : "bg-gray-100 text-gray-600"}`}
           >
             {m.label}
           </button>
@@ -513,7 +513,7 @@ export default function DiscoverPage() {
               handleFilterChange(() => setDistanceMax(d.value));
               if (myLat === null) requestLocation();
             }}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${distanceMax === d.value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600"}`}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition ${distanceMax === d.value ? "bg-[#003526] text-[#C4A44A] border border-[#C4A44A]" : "bg-gray-100 text-gray-600"}`}
           >
             {d.label}
           </button>
@@ -564,7 +564,7 @@ export default function DiscoverPage() {
           <div className="flex gap-2 justify-center">
             <button
               onClick={() => { handleFilterChange(() => { setActiveMode("all"); setDistanceMax(Infinity); }); }}
-              className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm"
+              className="bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] px-5 py-2.5 rounded-full font-semibold text-sm"
             >
               See everyone
             </button>
@@ -605,14 +605,14 @@ export default function DiscoverPage() {
                     )}
 
                     {!liked && p.compatibility_score >= 30 && (
-                      <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-emerald-500 rounded-full px-2 py-0.5">
+                      <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-[#C4A44A] rounded-full px-2 py-0.5">
                         <Zap className="w-2.5 h-2.5 text-white" />
                         <span className="text-[10px] font-bold text-white">{p.compatibility_score}% match</span>
                       </div>
                     )}
 
                     {liked && (
-                      <div className="absolute top-2 right-2 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+                      <div className="absolute top-2 right-2 w-7 h-7 bg-[#003526] rounded-full flex items-center justify-center shadow">
                         <Heart className="w-3.5 h-3.5 text-white fill-white" />
                       </div>
                     )}
