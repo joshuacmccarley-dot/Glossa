@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap, ArrowRight } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 
 const MODES = [
   {
@@ -40,17 +40,15 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#003526] border-b border-[#004535]">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-sm shadow-emerald-200">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-black text-xl text-gray-900 tracking-tight">sinc&apos;d</span>
+          <div className="flex items-center gap-2.5">
+            <img src="/logo-mark.svg" alt="sinc'd" className="w-8 h-10 object-contain" />
+            <span className="font-black text-xl text-white tracking-tight">sinc&apos;d</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition">Log in</Link>
-            <Link href="/auth/register" className="text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-4 py-2 rounded-full shadow-md shadow-emerald-100 hover:shadow-lg transition">
+            <Link href="/auth/login" className="text-sm font-medium text-white/70 hover:text-white transition">Log in</Link>
+            <Link href="/auth/register" className="text-sm font-bold bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] px-4 py-2 rounded-full shadow-md transition">
               Join free
             </Link>
           </div>
@@ -58,39 +56,39 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-24 pb-20 px-4 bg-gradient-to-b from-emerald-50/60 to-white">
+      <section className="pt-24 pb-20 px-4 bg-gradient-to-b from-[#003526] to-[#004535]">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-2 rounded-full mb-8 shadow-sm">
-            <span className="text-base">✦</span>
+          <img src="/logo.svg" alt="sinc'd" className="w-40 mx-auto mb-8" />
+          <div className="inline-flex items-center gap-2 bg-white/10 text-[#C4A44A] text-xs font-bold px-4 py-2 rounded-full mb-8 shadow-sm border border-[#C4A44A]/30">
             Connecting everyone, without the questioning
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 leading-[1.05] mb-6 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
             Feel connected<br />
-            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400 bg-clip-text text-transparent">
+            <span className="text-[#C4A44A]">
               without questioning
             </span>
           </h1>
-          <p className="text-xl text-gray-500 max-w-xl mx-auto mb-4 leading-relaxed">
+          <p className="text-xl text-white/70 max-w-xl mx-auto mb-4 leading-relaxed">
             sinc&apos;d isn&apos;t just a dating app. It&apos;s how your community connects — for romance, events, lending a hand, or simply finding your people.
           </p>
-          <p className="text-base text-gray-400 mb-10">
-            One app. Four ways to connect. One flat price — <strong className="text-gray-700">$5/month</strong> for everything.
+          <p className="text-base text-white/50 mb-10">
+            One app. Four ways to connect. One flat price — <strong className="text-white/80">$5/month</strong> for everything.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
             <Link
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-lg font-bold px-8 py-4 rounded-full shadow-xl shadow-emerald-200 hover:shadow-2xl hover:shadow-emerald-300 transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] text-lg font-black px-8 py-4 rounded-full shadow-xl transition-all active:scale-[0.98]"
             >
               Get sinc&apos;d — it&apos;s free
             </Link>
             <Link
               href="#modes"
-              className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 text-lg font-semibold px-8 py-4 rounded-full hover:border-emerald-200 hover:text-emerald-700 transition"
+              className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white text-lg font-semibold px-8 py-4 rounded-full hover:border-white/60 hover:text-white transition"
             >
               See how it works <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-sm text-gray-400">No credit card to join. No algorithms hiding your matches.</p>
+          <p className="text-sm text-white/40">No credit card to join. No algorithms hiding your matches.</p>
         </div>
       </section>
 
@@ -253,9 +251,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-10 px-4 text-center text-gray-400 text-sm">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-            <Zap className="w-3 h-3 text-white" />
-          </div>
+          <img src="/logo-mark.svg" alt="sinc'd" className="w-5 h-6 object-contain" />
           <span className="font-black text-gray-900">sinc&apos;d</span>
         </div>
         <p className="mb-4 text-gray-500 text-xs font-medium italic">&ldquo;Feel connected without questioning&rdquo;</p>

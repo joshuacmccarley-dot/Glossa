@@ -37,12 +37,12 @@ function wrap(body: string): string {
 export async function sendWelcomeEmail(to: string, name: string) {
   await send(
     to,
-    "Welcome to sinc'd 💚",
+    "Welcome to sinc'd",
     wrap(`
       <div class="header"><h1>sinc'd</h1><p>Feel connected without questioning</p></div>
       <div class="body">
         <div class="badge">You're in</div>
-        <h2 style="font-size:22px;font-weight:900;margin:0 0 12px">Hey ${name}! 👋</h2>
+        <h2 style="font-size:22px;font-weight:900;margin:0 0 12px">Hey ${name}!</h2>
         <p>You just joined a community built around real connection — not mindless swiping.</p>
         <p>Browse people by interest, show up to events, lend a hand, or just make friends in your city. You can be here for any of it.</p>
         <a class="cta" href="${APP_URL}/discover">Start exploring →</a>
@@ -58,7 +58,7 @@ export async function sendWelcomeEmail(to: string, name: string) {
 export async function sendMatchEmail(to: string, userName: string, matchName: string, matchId: string) {
   await send(
     to,
-    `💚 You matched with ${matchName} on sinc'd`,
+    `You matched with ${matchName} on sinc'd`,
     wrap(`
       <div class="header"><h1>It's a match!</h1><p>sinc'd</p></div>
       <div class="body">
@@ -66,7 +66,7 @@ export async function sendMatchEmail(to: string, userName: string, matchName: st
         <h2 style="font-size:22px;font-weight:900;margin:0 0 12px">Hey ${userName}!</h2>
         <p>You and <strong>${matchName}</strong> are sinc'd. You both liked each other — now it's time to say something real.</p>
         <div class="timer">
-          <strong>⏱️ 12-hour window is open</strong><br>
+          <strong>12-hour window is open</strong><br>
           <span style="color:#78350f;font-size:13px">Send a message before the clock runs out</span>
         </div>
         <a class="cta" href="${APP_URL}/chat/${matchId}">Start the conversation →</a>

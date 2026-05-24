@@ -48,7 +48,7 @@ export async function sendPushNotification(
 
 export async function sendMatchPush(sub: PushSubscriptionRecord, matchName: string, matchId: string) {
   return sendPushNotification(sub, {
-    title: "It's a match! 💚",
+    title: "It's a match!",
     body: `You and ${matchName} are sinc'd — send the first message before the 12-hour window closes.`,
     url: `/chat/${matchId}`,
   });
@@ -56,7 +56,7 @@ export async function sendMatchPush(sub: PushSubscriptionRecord, matchName: stri
 
 export async function sendMatchExpiringPush(sub: PushSubscriptionRecord, matchName: string, matchId: string, hoursLeft: number) {
   return sendPushNotification(sub, {
-    title: `⏱️ ${hoursLeft}h left with ${matchName}`,
+    title: `${hoursLeft}h left with ${matchName}`,
     body: "Your match expires soon — send a message now.",
     url: `/chat/${matchId}`,
   });
@@ -64,7 +64,7 @@ export async function sendMatchExpiringPush(sub: PushSubscriptionRecord, matchNa
 
 export async function sendMessagePush(sub: PushSubscriptionRecord, senderName: string, matchId: string) {
   return sendPushNotification(sub, {
-    title: `💬 New message from ${senderName}`,
+    title: `New message from ${senderName}`,
     body: "Open the conversation to reply.",
     url: `/chat/${matchId}`,
   });

@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-dark: #003526;
+  --color-brand-gold: #C4A44A;
+  --color-brand-gold-light: #D4BA70;
+  --color-brand-emerald: #00A879;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

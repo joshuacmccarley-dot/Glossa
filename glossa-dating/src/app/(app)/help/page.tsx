@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { HelpPost } from "@/types";
 import { HELP_CATEGORIES } from "@/lib/modes";
 import { distanceMiles, formatDistance, DISTANCE_PRESETS } from "@/lib/location";
-import { Plus, MapPin, MessageCircle, CheckCircle } from "lucide-react";
+import { Plus, MapPin, MessageCircle, CheckCircle, Zap, HandHeart } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 
 function getCatInfo(id: string) {

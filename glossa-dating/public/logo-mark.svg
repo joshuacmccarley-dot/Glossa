@@ -1,0 +1,12 @@
+<svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Upper gold arc -->
+  <path d="M 52 18 C 66 18 72 30 64 42 C 56 54 28 52 26 64"
+        stroke="#C4A44A" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <!-- Lower emerald arc -->
+  <path d="M 26 64 C 24 76 30 88 48 84"
+        stroke="#00A879" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <!-- Top dot -->
+  <circle cx="52" cy="18" r="7" fill="#00A879"/>
+  <!-- Bottom dot -->
+  <circle cx="48" cy="84" r="7" fill="#00A879"/>
+</svg>

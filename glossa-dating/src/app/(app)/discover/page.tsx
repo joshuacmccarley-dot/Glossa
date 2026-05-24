@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart, MessageSquare } from "lucide-react";
+import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart, MessageSquare, Leaf, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DiscoverProfile } from "@/types";
 import { getInterestById } from "@/lib/interests";
@@ -274,12 +274,12 @@ export default function DiscoverPage() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-4 pb-8 sm:pb-0">
           <div className="bg-white rounded-3xl p-8 text-center shadow-2xl w-full max-w-sm">
             <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
-              <span className="text-3xl">💚</span>
+              <Heart className="w-10 h-10 text-white fill-white" />
             </div>
             <h2 className="text-2xl font-black text-gray-900 mb-1">You&apos;re sinc&apos;d!</h2>
             <p className="text-gray-500 mb-2">You and <strong>{matched.name}</strong> connected.</p>
             <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 mb-6 text-sm">
-              <p className="font-semibold text-amber-800">⏱️ 12-hour window is open</p>
+              <p className="font-semibold text-amber-800">12-hour window is open</p>
               <p className="text-amber-600 mt-0.5 text-xs">Start a conversation before time closes.</p>
             </div>
             <div className="flex gap-2">
@@ -323,7 +323,7 @@ export default function DiscoverPage() {
                 onClick={() => setSelected(null)}
                 className="absolute top-4 left-4 w-9 h-9 bg-black/30 backdrop-blur rounded-full flex items-center justify-center text-white text-sm"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setReporting(selected)}
@@ -363,7 +363,7 @@ export default function DiscoverPage() {
                   if (!mode) return null;
                   return (
                     <span key={m} className={`text-xs font-medium px-3 py-1.5 rounded-full ${mode.color} ${mode.textColor}`}>
-                      {mode.emoji} {mode.label}
+                      {mode.label}
                     </span>
                   );
                 })}
@@ -374,7 +374,7 @@ export default function DiscoverPage() {
                 )}
                 {intentionLabel(selected) && (
                   <span className="flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-full px-3 py-1.5 text-sm font-medium">
-                    {intentionLabel(selected)!.emoji} {intentionLabel(selected)!.label}
+                    {intentionLabel(selected)!.label}
                   </span>
                 )}
               </div>
@@ -401,7 +401,7 @@ export default function DiscoverPage() {
                               : "bg-gray-50 text-gray-600 border-gray-200"
                           }`}
                         >
-                          {want.emoji} {want.label}{isShared ? " ✓" : ""}
+                          {want.label}{isShared ? " ✓" : ""}
                         </span>
                       );
                     })}
@@ -427,7 +427,7 @@ export default function DiscoverPage() {
                               : "bg-gray-50 text-gray-600 border-gray-200"
                           }`}
                         >
-                          {interest.emoji} {interest.label}{isShared ? " ✓" : ""}
+                          {interest.label}{isShared ? " ✓" : ""}
                         </span>
                       );
                     })}
