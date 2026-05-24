@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Match } from "@/types";
 import { calculateAge } from "@/lib/utils";
-import { Clock, RefreshCw, MessageCircle } from "lucide-react";
+import { Clock, RefreshCw, MessageCircle, Heart } from "lucide-react";
 import Link from "next/link";
 import { getInterestById } from "@/lib/interests";
 
@@ -139,7 +139,7 @@ export default function MatchesPage() {
         <div className="space-y-3">
           {activeMatches.length === 0 ? (
             <div className="text-center py-16">
-              <div className="text-5xl mb-3">💚</div>
+              <Heart className="w-12 h-12 text-emerald-200 mx-auto mb-3" />
               <p className="font-semibold text-gray-900">No active matches yet</p>
               <p className="text-gray-500 text-sm mt-1">Keep discovering to find your sinc</p>
               <Link href="/discover" className="inline-block mt-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-3 rounded-full font-semibold text-sm">
@@ -172,7 +172,7 @@ export default function MatchesPage() {
                   {m.last_message ? (
                     <p className="text-sm text-gray-500 truncate mt-0.5">{m.last_message.content}</p>
                   ) : (
-                    <p className="text-sm text-emerald-600 font-medium mt-0.5">Say something first! ✨</p>
+                    <p className="text-sm text-emerald-600 font-medium mt-0.5">Say something first!</p>
                   )}
                 </div>
                 <MessageCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
@@ -186,7 +186,7 @@ export default function MatchesPage() {
         <div className="space-y-3">
           {!isPremium && (
             <div className="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-5 text-white mb-4">
-              <p className="font-bold mb-1">🔓 Recover your expired matches</p>
+              <p className="font-bold mb-1">Recover your expired matches</p>
               <p className="text-sm text-white/80 mb-3">With sinc&apos;d Premium you can revive any expired match for just $5/month.</p>
               <Link href="/pricing" className="inline-block bg-white text-emerald-700 font-bold px-4 py-2 rounded-full text-sm">
                 Upgrade for $5/mo

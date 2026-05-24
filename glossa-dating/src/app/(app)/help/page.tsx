@@ -270,7 +270,7 @@ export default function HelpPage() {
       {/* Posts */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-3">🤝</div>
+          <div className="flex justify-center mb-3"><HandHeart className="w-12 h-12 text-gray-200" /></div>
           <p className="font-bold text-gray-900">Nothing here yet</p>
           <p className="text-sm text-gray-500 mt-1 mb-4">Be the first to offer or ask for help.</p>
           <button onClick={() => setCreating(true)} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-3 rounded-full font-semibold text-sm">Post something</button>
@@ -283,10 +283,10 @@ export default function HelpPage() {
             return (
               <div key={post.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${post.is_urgent ? "border-red-200 ring-1 ring-red-200" : post.kind === "need" ? "border-blue-100" : "border-teal-100"}`}>
                 <div className={`px-4 py-2.5 flex items-center gap-2 text-xs font-bold ${post.kind === "need" ? "bg-blue-50 text-blue-600" : "bg-teal-50 text-teal-600"}`}>
-                  <span>{post.kind === "need" ? "🙋 Needs help" : "🤝 Offering help"}</span>
+                  <span>{post.kind === "need" ? "Needs help" : "Offering help"}</span>
                   {post.is_urgent && (
                     <span className="flex items-center gap-0.5 bg-red-500 text-white px-2 py-0.5 rounded-full font-bold text-[11px]">
-                      ⚡ Urgent
+                      <Zap className="w-3 h-3" /> Urgent
                     </span>
                   )}
                   {cat && <span className="ml-auto">{cat.emoji} {cat.label}</span>}

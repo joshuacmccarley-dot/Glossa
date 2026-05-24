@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Event } from "@/types";
 import { EVENT_CATEGORIES } from "@/lib/modes";
 import { distanceMiles, formatDistance, DISTANCE_PRESETS } from "@/lib/location";
-import { Calendar, MapPin, Users, Plus, Clock, ArrowUpDown, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Plus, Clock, ArrowUpDown, MessageCircle, RefreshCw } from "lucide-react";
 import { sendEventRsvpEmail } from "@/lib/email";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -324,14 +324,14 @@ export default function EventsPage() {
           onClick={() => setRecurringOnly((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${recurringOnly ? "bg-purple-500 text-white" : "bg-gray-100 text-gray-600"}`}
         >
-          🔁 Recurring only
+          <RefreshCw className="w-3 h-3 inline mr-1" />Recurring only
         </button>
       </div>
 
       {/* Events list */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
-          <div className="text-5xl mb-3">🎉</div>
+          <div className="flex justify-center mb-3"><Calendar className="w-12 h-12 text-gray-200" /></div>
           <p className="font-bold text-gray-900">No events nearby yet</p>
           <p className="text-sm text-gray-500 mt-1 mb-4">Be the first — create one!</p>
           <button
@@ -353,14 +353,13 @@ export default function EventsPage() {
             return (
               <div key={evt.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 flex items-center gap-2">
-                  <span className="text-xl">{cat?.emoji || "🎉"}</span>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 truncate">{evt.title}</p>
                     <p className="text-xs text-amber-600 font-medium">{cat?.label || "Event"}</p>
                   </div>
                   {evt.recurrence && evt.recurrence !== "once" && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
-                      🔁 {evt.recurrence === "weekly" ? "Weekly" : evt.recurrence === "biweekly" ? "Biweekly" : "Monthly"}
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0 flex items-center gap-0.5">
+                      <RefreshCw className="w-3 h-3 inline mr-0.5" />{evt.recurrence === "weekly" ? "Weekly" : evt.recurrence === "biweekly" ? "Biweekly" : "Monthly"}
                     </span>
                   )}
                   {isCreator && (
