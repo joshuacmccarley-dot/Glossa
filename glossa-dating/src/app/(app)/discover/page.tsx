@@ -292,7 +292,7 @@ export default function DiscoverPage() {
               <Link
                 href={`/chat/${matched.matchId}`}
                 onClick={() => setMatched(null)}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3 rounded-2xl text-sm font-bold text-center"
+                className="flex-1 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] py-3 rounded-2xl text-sm font-bold text-center"
               >
                 Say something →
               </Link>
@@ -350,9 +350,9 @@ export default function DiscoverPage() {
             <div className="p-5 space-y-4 pb-8">
               {/* Compatibility score */}
               {selected.compatibility_score > 0 && (
-                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3">
-                  <Zap className="w-4 h-4 text-emerald-600" />
-                  <span className="font-semibold text-emerald-700 text-sm">{selected.compatibility_score}% match for you</span>
+                <div className="flex items-center gap-2 bg-[#FDF6E3] border border-[#C4A44A]/40 rounded-2xl px-4 py-3">
+                  <Zap className="w-4 h-4 text-[#7A6020]" />
+                  <span className="font-semibold text-[#7A6020] text-sm">{selected.compatibility_score}% match for you</span>
                 </div>
               )}
 
@@ -397,7 +397,7 @@ export default function DiscoverPage() {
                           key={id}
                           className={`text-xs px-3 py-1.5 rounded-full font-medium border ${
                             isShared
-                              ? "bg-teal-500 text-white border-teal-500"
+                              ? "bg-[#003526] text-[#C4A44A] border-[#003526]"
                               : "bg-gray-50 text-gray-600 border-gray-200"
                           }`}
                         >
@@ -423,7 +423,7 @@ export default function DiscoverPage() {
                           key={id}
                           className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-medium border ${
                             isShared
-                              ? "bg-emerald-500 text-white border-emerald-500"
+                              ? "bg-[#003526] text-[#C4A44A] border-[#003526]"
                               : "bg-gray-50 text-gray-600 border-gray-200"
                           }`}
                         >
@@ -474,7 +474,7 @@ export default function DiscoverPage() {
                 <button
                   onClick={() => handleLike(selected)}
                   disabled={likedIds.has(selected.user_id)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-100 disabled:opacity-50 transition active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] py-3.5 rounded-2xl font-bold shadow-lg shadow-[#C4A44A]/20 disabled:opacity-50 transition active:scale-[0.98]"
                 >
                   <Heart className="w-4 h-4 fill-white" />
                   {likedIds.has(selected.user_id) ? "Connected!" : "Connect"}
@@ -489,7 +489,7 @@ export default function DiscoverPage() {
       <div className="flex gap-1.5 overflow-x-auto pb-1 mb-4 -mx-1 px-1 scrollbar-hide">
         <button
           onClick={() => handleFilterChange(() => setActiveMode("all"))}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === "all" ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-600"}`}
+          className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${activeMode === "all" ? "bg-[#003526] text-[#C4A44A] shadow" : "bg-gray-100 text-gray-600"}`}
         >
           All
         </button>

@@ -67,7 +67,7 @@ function DetailSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition text-sm"
+        className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-[#C4A44A] focus:outline-none focus:ring-2 focus:ring-[#C4A44A]/20 transition text-sm"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -240,7 +240,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#C4A44A]/30 border-t-[#C4A44A] rounded-full animate-spin" />
       </div>
     );
   }
@@ -264,26 +264,26 @@ export default function ProfilePage() {
       </Link>
 
       {!profile.is_premium && (
-        <Link href="/pricing" className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-4 text-white mb-5 shadow-lg shadow-emerald-100">
+        <Link href="/pricing" className="flex items-center gap-3 bg-[#003526] rounded-2xl p-4 text-[#C4A44A] mb-5 shadow-lg shadow-[#003526]/20">
           <Crown className="w-6 h-6 flex-shrink-0" />
           <div className="flex-1">
             <p className="font-bold text-sm">Unlock sinc&apos;d Premium</p>
-            <p className="text-white/80 text-xs">Unlimited likes, match recovery, see who liked you — $5/mo</p>
+            <p className="text-[#C4A44A]/70 text-xs">Unlimited likes, match recovery, see who liked you — $5/mo</p>
           </div>
-          <span className="text-white/80 text-sm">→</span>
+          <span className="text-[#C4A44A]/70 text-sm">→</span>
         </Link>
       )}
 
       {profile.is_premium && (
-        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 mb-5">
-          <Crown className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-semibold text-emerald-700">sinc&apos;d Premium active</span>
+        <div className="flex items-center gap-2 bg-[#FDF6E3] border border-[#C4A44A] rounded-2xl px-4 py-3 mb-5">
+          <Crown className="w-4 h-4 text-[#C4A44A]" />
+          <span className="text-sm font-semibold text-[#003526]">sinc&apos;d Premium active</span>
         </div>
       )}
 
       {/* Profile header */}
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-        <div className="relative h-40 bg-gradient-to-br from-emerald-400 to-teal-400">
+        <div className="relative h-40 bg-gradient-to-br from-[#003526] to-[#005a3e]">
           <div className="absolute -bottom-10 left-6">
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
