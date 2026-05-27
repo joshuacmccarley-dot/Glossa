@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Trash2, Star, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { PhotoUpload } from "@/components/profile/photo-upload";
@@ -106,10 +107,9 @@ export default function PhotosPage() {
       <div className="grid grid-cols-3 gap-3 mb-6">
         {photos.map((photo) => (
           <div key={photo.url} className="relative aspect-square rounded-2xl overflow-hidden bg-gray-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photo.url} alt="Profile photo" className="w-full h-full object-cover" />
+            <Image src={photo.url} alt="Profile photo" fill className="object-cover" />
             {photo.isPrimary && (
-              <div className="absolute top-1.5 left-1.5 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <div className="absolute top-1.5 left-1.5 bg-[#C4A44A] text-[#003526] text-[10px] font-bold px-2 py-0.5 rounded-full">
                 Primary
               </div>
             )}
