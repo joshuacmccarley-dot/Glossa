@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { LandingHero } from "@/components/landing-hero";
 
 const MODES = [
   {
@@ -43,7 +44,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#003526] border-b border-[#004535]">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/logo-mark.svg" alt="sinc'd" className="w-8 h-10 object-contain" />
+            <Image src="/logo-mark.svg" alt="sinc'd" width={32} height={40} className="object-contain" unoptimized />
             <span className="font-black text-xl text-white tracking-tight">sinc&apos;d</span>
           </div>
           <div className="flex items-center gap-3">
@@ -56,41 +57,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-24 pb-20 px-4 bg-gradient-to-b from-[#003526] to-[#004535]">
-        <div className="max-w-3xl mx-auto text-center">
-          <img src="/logo.svg" alt="sinc'd" className="w-40 mx-auto mb-8" />
-          <div className="inline-flex items-center gap-2 bg-white/10 text-[#C4A44A] text-xs font-bold px-4 py-2 rounded-full mb-8 shadow-sm border border-[#C4A44A]/30">
-            Connecting everyone, without the questioning
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight [font-family:var(--font-playfair)]">
-            Feel connected<br />
-            <span className="text-[#C4A44A]">
-              without questioning
-            </span>
-          </h1>
-          <p className="text-xl text-white/70 max-w-xl mx-auto mb-4 leading-relaxed">
-            sinc&apos;d isn&apos;t just a dating app. It&apos;s how your community connects — for romance, events, lending a hand, or simply finding your people.
-          </p>
-          <p className="text-base text-white/50 mb-10">
-            One app. Four ways to connect. One flat price — <strong className="text-white/80">$5/month</strong> for everything.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
-            <Link
-              href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] text-lg font-black px-8 py-4 rounded-full shadow-xl transition-all active:scale-[0.98]"
-            >
-              Get sinc&apos;d — it&apos;s free
-            </Link>
-            <Link
-              href="#modes"
-              className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white text-lg font-semibold px-8 py-4 rounded-full hover:border-white/60 hover:text-white transition"
-            >
-              See how it works <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <p className="text-sm text-white/40">No credit card to join. No algorithms hiding your matches.</p>
-        </div>
-      </section>
+      <LandingHero />
 
       {/* Slogan callout */}
       <section className="py-10 px-4 bg-gradient-to-r from-emerald-600 to-teal-500">
@@ -251,7 +218,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-10 px-4 text-center text-gray-400 text-sm">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <img src="/logo-mark.svg" alt="sinc'd" className="w-5 h-6 object-contain" />
+          <Image src="/logo-mark.svg" alt="sinc'd" width={20} height={24} className="object-contain" unoptimized />
           <span className="font-black text-gray-900">sinc&apos;d</span>
         </div>
         <p className="mb-4 text-gray-500 text-xs font-medium italic">&ldquo;Feel connected without questioning&rdquo;</p>

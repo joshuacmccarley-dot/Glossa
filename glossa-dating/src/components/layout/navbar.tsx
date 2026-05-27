@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Search, Heart, MessageCircle, Calendar, HandHeart, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,7 @@ export function AppNavbar() {
       <header className="fixed top-0 left-0 right-0 z-40 bg-[#003526] border-b border-[#004535]">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/discover" className="flex items-center gap-2.5">
-            <img src="/logo-mark.svg" alt="sinc'd" className="w-8 h-10 object-contain" />
+            <Image src="/logo-mark.svg" alt="sinc'd" width={32} height={40} className="object-contain" unoptimized />
             <span className="font-black text-white text-lg tracking-tight [font-family:var(--font-playfair)]">sinc&apos;d</span>
           </Link>
 

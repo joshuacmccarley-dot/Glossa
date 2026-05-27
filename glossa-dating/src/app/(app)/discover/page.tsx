@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
 import { Zap, MapPin, Briefcase, ArrowUpDown, Flag, Heart, MessageSquare, Leaf, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DiscoverProfile } from "@/types";
@@ -471,14 +472,16 @@ export default function DiscoverPage() {
                 >
                   Skip
                 </button>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  whileHover={{ scale: 1.05 }}
                   onClick={() => handleLike(selected)}
                   disabled={likedIds.has(selected.user_id)}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] py-3.5 rounded-2xl font-bold shadow-lg shadow-[#C4A44A]/20 disabled:opacity-50 transition active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] py-3.5 rounded-2xl font-bold shadow-lg shadow-[#C4A44A]/20 disabled:opacity-50 transition"
                 >
                   <Heart className="w-4 h-4 fill-white" />
                   {likedIds.has(selected.user_id) ? "Connected!" : "Connect"}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>
@@ -576,7 +579,7 @@ export default function DiscoverPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3">
-            {profiles.map((p) => {
+            {profiles.map((p, index) => {
               const liked = likedIds.has(p.user_id);
               const intention = intentionLabel(p);
               const primaryMode = (p.connection_modes ?? [])[0];
@@ -584,10 +587,15 @@ export default function DiscoverPage() {
               const sharedWants = (p.wants ?? []).filter((w) => (myCtx?.wants ?? []).includes(w)).length;
 
               return (
+                <motion.div
+                  key={p.user_id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                >
                 <button
-                  key={p.id}
                   onClick={() => setSelected(p)}
-                  className="text-left rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] group"
+                  className="w-full text-left rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all active:scale-[0.98] group"
                 >
                   <div className="relative" style={{ aspectRatio: "4/5" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -650,6 +658,7 @@ export default function DiscoverPage() {
                     </div>
                   </div>
                 </button>
+                </motion.div>
               );
             })}
           </div>
