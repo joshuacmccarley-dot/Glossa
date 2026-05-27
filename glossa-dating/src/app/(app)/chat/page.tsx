@@ -5,6 +5,7 @@ import { Match } from "@/types";
 import { calculateAge, formatTimeAgo } from "@/lib/utils";
 import { Clock, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 function hoursLeft(expiresAt: string): string {
   const diff = new Date(expiresAt).getTime() - Date.now();
@@ -80,7 +81,7 @@ export default function ChatListPage() {
           <MessageCircle className="w-16 h-16 text-gray-200 mx-auto mb-4" />
           <p className="font-semibold text-gray-700">No conversations yet</p>
           <p className="text-sm text-gray-400 mt-1 mb-6">Match with someone to start chatting</p>
-          <Link href="/discover" className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-3 rounded-full font-semibold text-sm">
+          <Link href="/discover" className="bg-[#003526] hover:bg-[#004535] text-white px-6 py-3 rounded-full font-semibold text-sm">
             Discover people
           </Link>
         </div>
@@ -95,10 +96,12 @@ export default function ChatListPage() {
                 href={`/chat/${m.id}`}
                 className="flex items-center gap-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition"
               >
-                <img
+                <Image
                   src={m.profile?.photos?.[0] || `https://api.dicebear.com/9.x/personas/svg?seed=${m.profile?.user_id}&backgroundColor=d1fae5`}
-                  alt={m.profile?.display_name}
-                  className="w-14 h-14 rounded-2xl object-cover bg-emerald-100"
+                  alt={m.profile?.display_name ?? "User"}
+                  width={56}
+                  height={56}
+                  className="rounded-2xl object-cover bg-gray-100"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
@@ -106,7 +109,7 @@ export default function ChatListPage() {
                       {m.profile?.display_name}
                       {m.profile?.birthdate && `, ${calculateAge(m.profile.birthdate)}`}
                     </p>
-                    <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${isExpiring ? "text-amber-500" : "text-emerald-600"}`}>
+                    <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${isExpiring ? "text-amber-500" : "text-[#003526]"}`}>
                       <Clock className="w-3 h-3" />
                       {timeLeft}
                     </span>
@@ -114,7 +117,7 @@ export default function ChatListPage() {
                   {m.last_message ? (
                     <p className="text-sm text-gray-500 truncate">{m.last_message.content}</p>
                   ) : (
-                    <p className="text-sm text-emerald-600 font-medium">Start the conversation</p>
+                    <p className="text-sm text-[#003526] font-medium">Start the conversation</p>
                   )}
                 </div>
               </Link>

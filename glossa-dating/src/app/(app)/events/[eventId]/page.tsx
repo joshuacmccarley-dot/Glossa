@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeAgo } from "@/lib/utils";
@@ -123,18 +124,17 @@ export default function EventChatPage() {
           return (
             <div key={msg.id} className={`flex gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
               {!isOwn && (
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-emerald-100 flex-shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 relative">
                   {profile?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
+                    <Image src={profile.avatar_url} alt={profile.display_name} fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-emerald-200" />
+                    <div className="w-full h-full bg-gray-200" />
                   )}
                 </div>
               )}
               <div className={`max-w-[75%] ${isOwn ? "items-end" : "items-start"} flex flex-col gap-1`}>
                 {!isOwn && <span className="text-[11px] text-gray-400 px-1">{profile?.display_name}</span>}
-                <div className={`rounded-2xl px-4 py-2.5 text-sm ${isOwn ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"}`}>
+                <div className={`rounded-2xl px-4 py-2.5 text-sm ${isOwn ? "bg-[#003526] text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"}`}>
                   {msg.content}
                 </div>
                 <span className="text-[10px] text-gray-300 px-1">{formatTimeAgo(msg.created_at)}</span>
@@ -158,7 +158,7 @@ export default function EventChatPage() {
           <button
             onClick={send}
             disabled={!text.trim() || sending}
-            className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
+            className="w-10 h-10 bg-[#003526] hover:bg-[#004535] text-white rounded-full flex items-center justify-center disabled:opacity-40 transition-opacity"
           >
             <Send className="w-4 h-4" />
           </button>

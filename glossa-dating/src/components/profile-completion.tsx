@@ -87,13 +87,13 @@ export function ProfileCompletion() {
   if (dismissed || pct === null || pct >= 100 || !firstMissing) return null;
 
   return (
-    <div className="relative flex items-start gap-3 bg-white rounded-2xl shadow-sm border-l-4 border-l-emerald-500 border border-gray-100 px-4 py-3 mb-4">
+    <div className="relative flex items-start gap-3 bg-white rounded-2xl shadow-sm border-l-4 border-l-[#C4A44A] border border-gray-100 px-4 py-3 mb-4">
       <div className="flex-1 min-w-0">
         <p className="font-bold text-gray-900 text-sm">
           Your profile is {pct}% complete
         </p>
         <p className="text-xs text-gray-500 mt-0.5">
-          <Link href="/profile" className="text-emerald-600 font-semibold hover:underline">
+          <Link href="/profile" className="text-[#003526] font-semibold hover:underline">
             {firstMissing.cta}
           </Link>
           {" "}&rarr; {firstMissing.benefit}
@@ -101,7 +101,7 @@ export function ProfileCompletion() {
         {/* Progress bar */}
         <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all"
+            className="h-full bg-gradient-to-r from-[#003526] to-[#C4A44A] rounded-full transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>

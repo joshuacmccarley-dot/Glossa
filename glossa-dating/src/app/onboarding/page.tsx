@@ -104,7 +104,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="px-4 pt-6 pb-2 max-w-lg mx-auto w-full">
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#003526] rounded-xl flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
           <span className="font-black text-gray-900">sinc&apos;d</span>
@@ -223,7 +223,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={detectLocation}
               disabled={locating}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-50 border-2 border-emerald-200 text-emerald-700 font-semibold py-4 rounded-2xl hover:bg-emerald-100 transition disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 bg-[#003526]/5 border-2 border-[#003526]/20 text-[#003526] font-semibold py-4 rounded-2xl hover:bg-[#003526]/10 transition disabled:opacity-60"
             >
               <MapPin className="w-4 h-4" />
               {locating ? "Detecting..." : lat ? <><MapPin className="w-4 h-4 inline mr-1" />Location detected</> : "Use my current location"}
@@ -264,12 +264,12 @@ export default function OnboardingPage() {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={400}
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition resize-none text-sm"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-[#C4A44A] focus:outline-none focus:ring-2 focus:ring-[#C4A44A]/20 transition resize-none text-sm"
               />
               <p className="text-right text-xs text-gray-400 mt-1">{bio.length}/400</p>
             </div>
-            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-sm space-y-1.5">
-              <p className="font-semibold text-emerald-800 text-xs uppercase tracking-wide">Need a prompt?</p>
+            <div className="bg-[#003526]/5 border border-[#003526]/10 rounded-2xl p-4 text-sm space-y-1.5">
+              <p className="font-semibold text-[#003526] text-xs uppercase tracking-wide">Need a prompt?</p>
               {[
                 "The thing I'm most passionate about right now is...",
                 "A perfect weekend looks like...",
@@ -277,7 +277,7 @@ export default function OnboardingPage() {
                 "I'm probably overthinking...",
                 "The best conversation starter is...",
               ].map((p) => (
-                <button key={p} type="button" onClick={() => setBio(p)} className="block text-left text-emerald-700 hover:text-emerald-900 transition text-sm">
+                <button key={p} type="button" onClick={() => setBio(p)} className="block text-left text-[#003526] hover:text-[#004535] transition text-sm">
                   → {p}
                 </button>
               ))}

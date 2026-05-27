@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
             key={s.label}
             className={`bg-white rounded-2xl p-5 shadow-sm border ${s.urgent ? "border-red-200 bg-red-50" : "border-gray-100"}`}
           >
-            <div className={`text-3xl font-black mb-1 ${s.urgent ? "text-red-600" : "text-emerald-600"}`}>{s.value.toLocaleString()}</div>
+            <div className={`text-3xl font-black mb-1 ${s.urgent ? "text-red-600" : "text-[#003526]"}`}>{s.value.toLocaleString()}</div>
             <div className="text-sm text-gray-500">{s.label}</div>
           </div>
         ))}

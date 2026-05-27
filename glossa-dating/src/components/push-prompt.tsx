@@ -72,7 +72,7 @@ export function PushPrompt() {
   return (
     <div className="fixed bottom-24 left-4 right-4 z-50 max-w-sm mx-auto">
       <div className="bg-white rounded-2xl shadow-2xl shadow-gray-200 border border-gray-100 p-4 flex gap-3 items-start">
-        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-[#003526] rounded-xl flex items-center justify-center flex-shrink-0">
           <Bell className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ export function PushPrompt() {
             <button
               onClick={enable}
               disabled={subscribing}
-              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-xs font-bold py-2 rounded-full disabled:opacity-60"
+              className="flex-1 bg-[#003526] hover:bg-[#004535] text-white text-xs font-bold py-2 rounded-full disabled:opacity-60"
             >
               {subscribing ? "Enabling..." : "Enable alerts"}
             </button>

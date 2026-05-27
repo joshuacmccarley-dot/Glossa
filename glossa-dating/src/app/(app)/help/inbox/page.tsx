@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowLeft, CheckCircle, Inbox } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatTimeAgo } from "@/lib/utils";
@@ -78,7 +79,7 @@ export default function HelpInboxPage() {
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              tab === t ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              tab === t ? "bg-[#003526] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {t === "open" ? "Open" : "Resolved"}
@@ -100,12 +101,11 @@ export default function HelpInboxPage() {
             return (
               <div key={r.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-emerald-50 flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
                     {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
+                      <Image src={profile.avatar_url} alt={profile.display_name ?? "User"} width={40} height={40} className="object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-emerald-200" />
+                      <div className="w-full h-full bg-gray-200" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -119,7 +119,7 @@ export default function HelpInboxPage() {
                 {!r.resolved && (
                   <button
                     onClick={() => markResolved(r.id)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#003526] hover:text-[#004535]"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Mark as resolved

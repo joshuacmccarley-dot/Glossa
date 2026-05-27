@@ -73,7 +73,7 @@ export default function ReferralPage() {
     <div className="max-w-lg mx-auto px-4 py-8">
       {/* Hero */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
+        <div className="w-16 h-16 bg-[#003526] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#003526]/20">
           <Gift className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-3xl font-black text-gray-900 mb-2">Get 30 days free</h1>
@@ -84,13 +84,13 @@ export default function ReferralPage() {
 
       {/* Stats */}
       {data && (
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-          <Users className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+        <div className="bg-[#003526]/5 border border-[#003526]/10 rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
+          <Users className="w-5 h-5 text-[#003526] flex-shrink-0" />
           <div>
-            <p className="font-bold text-emerald-800 text-sm">
+            <p className="font-bold text-[#003526] text-sm">
               {data.uses} {data.uses === 1 ? "person has" : "people have"} used your code
             </p>
-            <p className="text-xs text-emerald-600">Every referral earns you both 30 days free</p>
+            <p className="text-xs text-[#003526]/70">Every referral earns you both 30 days free</p>
           </div>
         </div>
       )}
@@ -105,7 +105,7 @@ export default function ReferralPage() {
           <div className="flex gap-2">
             <button
               onClick={copyLink}
-              className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white py-3 rounded-2xl font-semibold text-sm transition"
+              className="flex-1 flex items-center justify-center gap-2 bg-[#003526] hover:bg-[#004535] active:bg-[#002518] text-white py-3 rounded-2xl font-semibold text-sm transition"
             >
               {copied ? (
                 <>
@@ -140,7 +140,7 @@ export default function ReferralPage() {
             { step: "3", text: "You both get 30 days of Premium free" },
           ].map((item) => (
             <li key={item.step} className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+              <div className="w-6 h-6 bg-[#C4A44A]/20 text-[#003526] rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
                 {item.step}
               </div>
               <p className="text-sm text-gray-600">{item.text}</p>
@@ -156,9 +156,9 @@ export default function ReferralPage() {
 
         {claimResult ? (
           claimResult.rewarded ? (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-4 text-center">
-              <Gift className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-              <p className="font-bold text-emerald-800 text-sm">
+            <div className="bg-[#003526]/5 border border-[#003526]/10 rounded-2xl px-4 py-4 text-center">
+              <Gift className="w-6 h-6 text-[#C4A44A] mx-auto mb-2" />
+              <p className="font-bold text-[#003526] text-sm">
                 Reward claimed! You and {claimResult.referrerName} both got 30 days free.
               </p>
             </div>
@@ -175,7 +175,7 @@ export default function ReferralPage() {
           <button
             onClick={claimReward}
             disabled={claiming}
-            className="w-full py-3 border-2 border-emerald-200 text-emerald-700 rounded-2xl font-semibold text-sm hover:bg-emerald-50 transition disabled:opacity-50"
+            className="w-full py-3 border-2 border-[#003526]/30 text-[#003526] rounded-2xl font-semibold text-sm hover:bg-[#003526]/5 transition disabled:opacity-50"
           >
             {claiming ? "Checking..." : "Claim my referral reward"}
           </button>

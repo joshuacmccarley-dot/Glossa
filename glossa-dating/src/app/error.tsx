@@ -10,7 +10,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       </div>
       <h1 className="text-2xl font-black text-gray-900 mb-2">Something went wrong</h1>
       <p className="text-gray-500 mb-8 max-w-sm">Don&apos;t worry — this happens sometimes. Try refreshing.</p>
-      <button onClick={reset} className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-bold px-8 py-4 rounded-full shadow-lg">
+      <button onClick={reset} className="bg-[#003526] hover:bg-[#004535] text-white font-bold px-8 py-4 rounded-full shadow-lg">
         Try again
       </button>
     </div>

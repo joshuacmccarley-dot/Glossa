@@ -25,8 +25,8 @@ function KindIcon({ kind }: { kind: string }) {
   switch (kind) {
     case "match":
       return (
-        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Heart className="w-4 h-4 text-emerald-600" />
+        <div className="w-8 h-8 rounded-full bg-[#003526]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Heart className="w-4 h-4 text-[#003526]" />
         </div>
       );
     case "match_expiring":
@@ -70,7 +70,7 @@ function KindIcon({ kind }: { kind: string }) {
 
 function kindBg(kind: string): string {
   switch (kind) {
-    case "match": return "bg-emerald-50 border-emerald-100";
+    case "match": return "bg-[#003526]/5 border-[#003526]/10";
     case "match_expiring": return "bg-amber-50 border-amber-100";
     case "liked_you": return "bg-rose-50 border-rose-100";
     case "help_response": return "bg-blue-50 border-blue-100";
@@ -145,8 +145,8 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center px-6">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                <Bell className="w-5 h-5 text-emerald-600" />
+              <div className="w-10 h-10 rounded-full bg-[#003526]/10 flex items-center justify-center mb-3">
+                <Bell className="w-5 h-5 text-[#003526]" />
               </div>
               <p className="font-semibold text-gray-700">You&apos;re all caught up</p>
               <p className="text-sm text-gray-400 mt-1">No new notifications</p>
@@ -165,7 +165,7 @@ export function NotificationsDrawer({ open, onClose }: NotificationsDrawerProps)
                       <p className="text-[10px] text-gray-400 mt-1">{formatTimeAgo(n.created_at)}</p>
                     </div>
                     {!n.read && (
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />
+                      <div className="w-2 h-2 rounded-full bg-[#C4A44A] flex-shrink-0 mt-1.5" />
                     )}
                   </div>
                 );

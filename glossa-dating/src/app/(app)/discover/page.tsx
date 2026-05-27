@@ -542,7 +542,7 @@ export default function DiscoverPage() {
         <button
           onClick={requestLocation}
           disabled={locating}
-          className="w-full flex items-center justify-center gap-2 mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-xl text-sm font-semibold"
+          className="w-full flex items-center justify-center gap-2 mb-4 bg-[#003526]/5 border border-[#003526]/20 text-[#003526] py-2.5 rounded-xl text-sm font-semibold"
         >
           <MapPin className="w-4 h-4" />
           {locating ? "Detecting location..." : "Enable location for distance filters"}
@@ -644,7 +644,7 @@ export default function DiscoverPage() {
                       {(p.interests ?? []).slice(0, 2).map((id) => {
                         const interest = getInterestById(id);
                         return interest ? (
-                          <span key={id} className="text-[10px] bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5">
+                          <span key={id} className="text-[10px] bg-[#003526]/5 text-[#003526] rounded-full px-2 py-0.5">
                             {interest.label}
                           </span>
                         ) : null;

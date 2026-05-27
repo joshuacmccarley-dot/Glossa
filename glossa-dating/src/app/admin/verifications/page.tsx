@@ -51,11 +51,9 @@ export default async function VerificationsPage() {
                 <div className="flex gap-4 items-start">
                   <div className="flex gap-3">
                     {profile?.avatar_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={profile.avatar_url} alt="Profile" className="w-16 h-16 rounded-xl object-cover" />
+                      <Image src={profile.avatar_url} alt="Profile" width={64} height={64} className="rounded-xl object-cover" />
                     )}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.selfie_url} alt="Selfie" className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-200" />
+                    <Image src={item.selfie_url} alt="Selfie" width={64} height={64} className="rounded-xl object-cover border-2 border-[#C4A44A]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-gray-900">{profile?.display_name ?? "Unknown"}</div>
@@ -68,7 +66,7 @@ export default async function VerificationsPage() {
                       <button
                         name="action"
                         value="approved"
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-full transition-colors"
+                        className="px-4 py-2 bg-[#003526] hover:bg-[#004535] text-white text-sm font-semibold rounded-full transition-colors"
                       >
                         Approve
                       </button>

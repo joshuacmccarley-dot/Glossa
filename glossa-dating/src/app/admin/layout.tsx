@@ -17,9 +17,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-6">
         <h1 className="text-lg font-black text-gray-900">sinc&apos;d Admin</h1>
         <nav className="flex gap-4 text-sm">
-          <Link href="/admin" className="text-gray-600 hover:text-emerald-600 font-medium">Dashboard</Link>
-          <Link href="/admin/verifications" className="text-gray-600 hover:text-emerald-600 font-medium">Verifications</Link>
-          <Link href="/admin/reports" className="text-gray-600 hover:text-emerald-600 font-medium">Reports</Link>
+          <Link href="/admin" className="text-gray-600 hover:text-[#003526] font-medium">Dashboard</Link>
+          <Link href="/admin/verifications" className="text-gray-600 hover:text-[#003526] font-medium">Verifications</Link>
+          <Link href="/admin/reports" className="text-gray-600 hover:text-[#003526] font-medium">Reports</Link>
         </nav>
         <Link href="/discover" className="ml-auto text-sm text-gray-400 hover:text-gray-600">← App</Link>
       </header>

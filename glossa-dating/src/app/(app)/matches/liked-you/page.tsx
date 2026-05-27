@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Crown, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -99,14 +100,13 @@ export default function LikedYouPage() {
               {likers.slice(0, 5).map((l, i) => (
                 <div
                   key={l.id}
-                  className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-emerald-100 -ml-2 first:ml-0 filter blur-sm"
+                  className="w-12 h-12 rounded-full overflow-hidden border-2 border-white bg-gray-100 -ml-2 first:ml-0 filter blur-sm relative"
                   style={{ zIndex: 10 - i }}
                 >
                   {l.profiles?.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={l.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                    <Image src={l.profiles.avatar_url} alt="" fill className="object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-emerald-200" />
+                    <div className="w-full h-full bg-gray-200" />
                   )}
                 </div>
               ))}
@@ -126,12 +126,11 @@ export default function LikedYouPage() {
         <div className="space-y-3">
           {likers.map((liker) => (
             <div key={liker.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl overflow-hidden bg-emerald-50 flex-shrink-0">
+              <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
                 {liker.profiles?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={liker.profiles.avatar_url} alt={liker.profiles.display_name} className="w-full h-full object-cover" />
+                  <Image src={liker.profiles.avatar_url} alt={liker.profiles.display_name} width={56} height={56} className="object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-emerald-200 to-teal-200" />
+                  <div className="w-full h-full bg-gray-200" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-emerald-50 to-white">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200 mb-3">
+          <div className="w-14 h-14 bg-[#003526] rounded-2xl flex items-center justify-center shadow-lg shadow-[#003526]/20 mb-3">
             <Zap className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-black text-gray-900">sinc&apos;d</h1>

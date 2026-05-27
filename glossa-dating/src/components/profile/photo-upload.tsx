@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Camera, Loader2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -65,13 +66,12 @@ export function PhotoUpload({ userId, currentUrl, onUploaded, label = "Upload ph
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
         disabled={uploading}
-        className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-emerald-200 hover:border-emerald-400 bg-emerald-50 transition-colors flex items-center justify-center group"
+        className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-[#C4A44A]/50 hover:border-[#C4A44A] bg-[#003526]/5 transition-colors flex items-center justify-center group"
       >
         {displayUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={displayUrl} alt="Profile photo" className="w-full h-full object-cover" />
+          <Image src={displayUrl} alt="Profile photo" fill className="object-cover" />
         ) : (
-          <Camera className="w-8 h-8 text-emerald-300 group-hover:text-emerald-500 transition-colors" />
+          <Camera className="w-8 h-8 text-[#C4A44A]/60 group-hover:text-[#C4A44A] transition-colors" />
         )}
         {uploading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

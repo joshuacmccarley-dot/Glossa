@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-emerald-50 to-white">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200 mb-3">
+          <div className="w-14 h-14 bg-[#003526] rounded-2xl flex items-center justify-center shadow-lg shadow-[#003526]/20 mb-3">
             <Zap className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-black text-gray-900">sinc&apos;d</h1>
@@ -41,14 +41,14 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-100 p-8">
           {sent ? (
             <div className="text-center">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-7 h-7 text-emerald-600" />
+              <div className="w-14 h-14 bg-[#003526]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-7 h-7 text-[#003526]" />
               </div>
               <h2 className="text-xl font-black text-gray-900 mb-2">Check your inbox</h2>
               <p className="text-gray-500 text-sm mb-6">
                 We sent a password reset link to <strong>{email}</strong>. Check your spam folder if you don&apos;t see it.
               </p>
-              <Link href="/auth/login" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
+              <Link href="/auth/login" className="text-sm font-semibold text-[#003526] hover:text-[#004535]">
                 ← Back to login
               </Link>
             </div>
