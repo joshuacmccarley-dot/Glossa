@@ -105,7 +105,7 @@ export default function RegisterPage() {
             {step === 2 && (
               <>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-1">Create your account</h2>
+                  <h2 className="text-xl font-bold text-gray-900 mb-1 [font-family:var(--font-playfair)]">Create your account</h2>
                   <p className="text-sm text-gray-500 mb-4">Almost there, {displayName}.</p>
                 </div>
                 <Input

@@ -38,6 +38,7 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-white rounded-3xl shadow-xl shadow-gray-100 p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-5 [font-family:var(--font-playfair)]">Welcome back</h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <Input
               id="email"

@@ -62,7 +62,7 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-white/10 text-[#C4A44A] text-xs font-bold px-4 py-2 rounded-full mb-8 shadow-sm border border-[#C4A44A]/30">
             Connecting everyone, without the questioning
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight [font-family:var(--font-playfair)]">
             Feel connected<br />
             <span className="text-[#C4A44A]">
               without questioning

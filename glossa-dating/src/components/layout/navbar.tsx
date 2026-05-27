@@ -79,7 +79,7 @@ export function AppNavbar() {
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/discover" className="flex items-center gap-2.5">
             <img src="/logo-mark.svg" alt="sinc'd" className="w-8 h-10 object-contain" />
-            <span className="font-black text-white text-lg tracking-tight">sinc&apos;d</span>
+            <span className="font-black text-white text-lg tracking-tight [font-family:var(--font-playfair)]">sinc&apos;d</span>
           </Link>
 
           <div className="flex items-center gap-2">
