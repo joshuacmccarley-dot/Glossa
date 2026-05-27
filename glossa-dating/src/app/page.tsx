@@ -60,7 +60,7 @@ export default function LandingPage() {
       <LandingHero />
 
       {/* Slogan callout */}
-      <section className="py-10 px-4 bg-gradient-to-r from-emerald-600 to-teal-500">
+      <section className="py-10 px-4 bg-[#003526]">
         <div className="max-w-2xl mx-auto text-center text-white">
           <p className="text-2xl md:text-3xl font-black leading-snug">
             &ldquo;sinc&apos;d — feel connected without questioning&rdquo;
@@ -122,13 +122,13 @@ export default function LandingPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-5">
               <div className="flex gap-2 mb-3">
                 {["5 mi", "25 mi", "50 mi", "100 mi", "Anywhere"].map((d, i) => (
-                  <div key={d} className={`flex-1 text-center text-xs py-2 rounded-xl font-semibold transition ${i === 1 ? "bg-emerald-500 text-white shadow" : "bg-gray-100 text-gray-500"}`}>
+                  <div key={d} className={`flex-1 text-center text-xs py-2 rounded-xl font-semibold transition ${i === 1 ? "bg-[#003526] text-white shadow" : "bg-gray-100 text-gray-500"}`}>
                     {d}
                   </div>
                 ))}
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 text-center bg-emerald-50 border-2 border-emerald-400 rounded-xl py-2.5 text-sm font-bold text-emerald-700">↑ Closest first</div>
+                <div className="flex-1 text-center bg-[#003526]/5 border-2 border-[#C4A44A] rounded-xl py-2.5 text-sm font-bold text-[#003526]">↑ Closest first</div>
                 <div className="flex-1 text-center bg-gray-50 border-2 border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-500">↓ Furthest first</div>
               </div>
               <p className="text-center text-xs text-gray-400 mt-3">Tap any filter — it updates instantly</p>
@@ -140,7 +140,7 @@ export default function LandingPage() {
       {/* 12-hour rule */}
       <section className="py-16 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-500 rounded-3xl p-10 text-center text-white shadow-2xl shadow-emerald-100 relative overflow-hidden">
+          <div className="bg-[#003526] rounded-3xl p-10 text-center text-white shadow-2xl shadow-[#003526]/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
             <div className="text-4xl mb-3">⏱️</div>
             <h2 className="text-2xl font-black mb-3">The 12-Hour Rule</h2>
@@ -186,8 +186,8 @@ export default function LandingPage() {
             Every mode. Every filter. Match recovery. Who liked you. No tier system. Just $5, flat.
           </p>
           <div className="relative mb-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-300 to-teal-300 rounded-3xl blur-xl opacity-40 scale-95" />
-            <div className="relative bg-gradient-to-br from-emerald-600 to-teal-500 rounded-3xl p-8 text-white shadow-xl">
+            <div className="absolute inset-0 bg-[#003526] rounded-3xl blur-xl opacity-40 scale-95" />
+            <div className="relative bg-[#003526] rounded-3xl p-8 text-white shadow-xl">
               <div className="text-6xl font-black mb-1">$5</div>
               <div className="text-white/70 mb-7">per month · cancel any time</div>
               <ul className="text-sm space-y-2.5 text-left mb-8">
@@ -206,7 +206,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/auth/register" className="block w-full text-center bg-white text-emerald-700 font-bold py-4 rounded-2xl hover:bg-emerald-50 transition shadow-md text-base">
+              <Link href="/auth/register" className="block w-full text-center bg-[#C4A44A] hover:bg-[#D4BA70] text-[#003526] font-bold py-4 rounded-2xl transition shadow-md text-base">
                 Join sinc&apos;d free →
               </Link>
             </div>
