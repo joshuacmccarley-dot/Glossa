@@ -1,0 +1,31 @@
+<svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- S-mark icon -->
+  <!-- Upper gold arc: from top-right, sweeps left through center -->
+  <path d="M 118 42 C 138 42 146 58 136 72 C 126 86 82 84 78 100"
+        stroke="#C4A44A" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- Lower emerald arc: from center through bottom-right -->
+  <path d="M 78 100 C 74 116 62 128 82 138 C 98 146 122 140 122 140"
+        stroke="#00A879" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <!-- Top emerald dot -->
+  <circle cx="118" cy="42" r="10" fill="#00A879"/>
+  <!-- Bottom emerald dot -->
+  <circle cx="82" cy="140" r="10" fill="#00A879"/>
+
+  <!-- sinc'd wordmark -->
+  <text x="100" y="180"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="36"
+        font-weight="300"
+        fill="#C4A44A"
+        text-anchor="middle"
+        letter-spacing="2">sinc&#39;d</text>
+
+  <!-- Subtitle -->
+  <text x="100" y="205"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="11"
+        font-weight="400"
+        fill="#C4A44A"
+        text-anchor="middle"
+        letter-spacing="4">DATING  ·  EVENTS  ·  NETWORKING</text>
+</svg>

@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-dark: #003526;
+  --color-brand-gold: #C4A44A;
+  --color-brand-gold-light: #D4BA70;
+  --color-brand-emerald: #00A879;
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-inter);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Brand selection / active states used across the app */
+.brand-selected {
+  border-color: #C4A44A !important;
+  background-color: #FDF6E3 !important;
+  color: #003526 !important;
+}
+
+/* Brand chip — interest/want tags, mode buttons */
+.chip-active {
+  background: #003526;
+  color: #C4A44A;
+  border-color: #003526;
+}
+
+/* Sent chat bubble */
+.bubble-sent {
+  background: #003526;
+  color: #ffffff;
+}
+
+/* Progress bar fill */
+.progress-fill {
+  background: #C4A44A;
+}
+
+/* Compatibility badge */
+.compat-badge {
+  background: #FDF6E3;
+  color: #7A6020;
+  border: 1px solid #C4A44A;
+}
