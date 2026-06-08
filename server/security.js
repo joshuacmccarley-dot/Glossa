@@ -28,22 +28,21 @@ export function sanitizeInput(text) {
 }
 
 // ── Sliding-Window Rate Limiter ────────────────────────────────────────────────
-// Keyed by path + IP. GC kicks in when the map exceeds 5 k entries.
-
-const windows = new Map();
+// Each rateLimiter() call owns its own Map so state is isolated per route/server.
+// GC kicks in when the per-limiter map exceeds 5 k entries.
 
 export function rateLimiter(maxReqs, windowMs) {
+  const windows = new Map();
   return (req, res, next) => {
-    const ip = getIP(req);
-    const key = `${req.path}::${ip}`;
+    const ip  = getIP(req);
     const now = Date.now();
-    const hits = (windows.get(key) || []).filter(t => now - t < windowMs);
+    const hits = (windows.get(ip) || []).filter(t => now - t < windowMs);
     if (hits.length >= maxReqs) {
       auditLog('RATE_LIMIT_HIT', { ip, path: req.path });
       return res.status(429).json({ error: 'Rate limit exceeded — slow down.' });
     }
     hits.push(now);
-    windows.set(key, hits);
+    windows.set(ip, hits);
     if (windows.size > 5000) {
       for (const [k, v] of windows) {
         if (v.every(t => now - t > windowMs)) windows.delete(k);
