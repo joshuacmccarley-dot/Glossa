@@ -899,7 +899,10 @@ function StageOutput({ stage, data }) {
     <div style={{ marginTop:13, background:"rgba(0,0,0,0.28)", border:"1px solid "+color+"22", borderRadius:10, padding:"14px 16px", animation:"rise 0.4s ease" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:13 }}>
         <span style={{ fontSize:8, color, fontFamily:"monospace", fontWeight:700, letterSpacing:2.5 }}>✦ AGENT OUTPUT</span>
-        <button onClick={() => setRaw(r => !r)} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:4, color:"rgba(255,255,255,0.3)", fontSize:8, padding:"3px 8px", cursor:"pointer", fontFamily:"monospace" }}>{raw ? "HIDE" : "RAW JSON"}</button>
+        <div style={{ display:"flex", gap:6 }}>
+          <CopyBtn text={JSON.stringify(data, null, 2)} color={color} />
+          <button onClick={() => setRaw(r => !r)} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:4, color:"rgba(255,255,255,0.3)", fontSize:8, padding:"3px 8px", cursor:"pointer", fontFamily:"monospace" }}>{raw ? "HIDE" : "RAW JSON"}</button>
+        </div>
       </div>
 
       {id === "research" && (<>
@@ -1204,11 +1207,17 @@ function StageOutput({ stage, data }) {
           ))}
         </div>
         <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:8, color:color+"99", fontFamily:"monospace", letterSpacing:2, marginBottom:7 }}>EMAIL TEMPLATE</div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:7 }}>
+            <div style={{ fontSize:8, color:color+"99", fontFamily:"monospace", letterSpacing:2 }}>EMAIL TEMPLATE</div>
+            <CopyBtn text={data.email_template} color={color} />
+          </div>
           <pre style={{ background:"rgba(0,0,0,0.4)", border:"1px solid rgba(6,182,212,0.15)", borderRadius:7, padding:"10px 12px", fontSize:9, color:"rgba(255,255,255,0.7)", fontFamily:"monospace", whiteSpace:"pre-wrap", wordBreak:"break-word", lineHeight:1.7 }}>{data.email_template}</pre>
         </div>
         <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:8, color:color+"99", fontFamily:"monospace", letterSpacing:2, marginBottom:5 }}>DM TEMPLATE</div>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:5 }}>
+            <div style={{ fontSize:8, color:color+"99", fontFamily:"monospace", letterSpacing:2 }}>DM TEMPLATE</div>
+            <CopyBtn text={data.dm_template} color={color} />
+          </div>
           <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(6,182,212,0.12)", borderRadius:6, padding:"9px 11px", fontSize:10, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>{data.dm_template}</div>
         </div>
         <div style={{ marginBottom:12, padding:"10px 12px", background:"rgba(6,182,212,0.05)", border:"1px solid rgba(6,182,212,0.2)", borderRadius:7 }}>
@@ -1329,21 +1338,99 @@ function WebsitePreview({ data, color }) {
   );
 }
 
+// ── CopyBtn ───────────────────────────────────────────────────
+
+function CopyBtn({ text, color = "rgba(255,255,255,0.3)" }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    try { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
+  }
+  return (
+    <button onClick={copy} style={{ background:"none", border:"1px solid rgba(255,255,255,0.08)", borderRadius:4, color:copied?"#00FFB2":color, fontSize:8, padding:"2px 8px", cursor:"pointer", fontFamily:"monospace", letterSpacing:1, flexShrink:0 }}>
+      {copied ? "✓" : "COPY"}
+    </button>
+  );
+}
+
+// ── ExportMenu ────────────────────────────────────────────────
+
+function ExportMenu({ results, niche }) {
+  const [open, setOpen] = useState(false);
+
+  function exportCSV() {
+    const p = results.prospect;
+    if (!p || !p.prospect_list) return;
+    const rows = [['Name','Location','Priority','Channel','Est MRR','Signal'],
+      ...p.prospect_list.map(x => [x.name, x.location, x.priority, x.channel, x.est_mrr, x.signal])];
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download:`${niche.replace(/ /g,'-')}-prospects.csv` });
+    a.click();
+  }
+
+  function exportJSON() {
+    const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(new Blob([JSON.stringify(results,null,2)],{type:'application/json'})), download:`automater-${niche.replace(/ /g,'-')}.json` });
+    a.click();
+  }
+
+  async function exportZIP() {
+    const { default: JSZip } = await import('jszip');
+    const zip = new JSZip();
+    Object.entries(results).forEach(([id, data]) => zip.file(`${id}.json`, JSON.stringify(data,null,2)));
+    if (results.deploy && results.deploy.html) zip.file('website.html', results.deploy.html);
+    const url = URL.createObjectURL(await zip.generateAsync({ type:'blob' }));
+    const a = Object.assign(document.createElement('a'), { href:url, download:`automater-${niche.replace(/ /g,'-')}.zip` });
+    a.click();
+  }
+
+  const xBtn = (onClick, color, label) => (
+    <button onClick={() => { onClick(); setOpen(false); }} style={{ background:'none', border:`1px solid ${color}30`, borderRadius:5, color, fontSize:9, padding:'6px 12px', cursor:'pointer', fontFamily:'monospace', textAlign:'left', width:'100%' }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div style={{ position:'relative', display:'inline-block' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'rgba(255,255,255,0.55)', fontSize:10, padding:'9px 16px', cursor:'pointer', fontFamily:'monospace', letterSpacing:1 }}>
+        ↓ EXPORT
+      </button>
+      {open && (
+        <div style={{ position:'absolute', bottom:'calc(100% + 4px)', right:0, background:'#0E1117', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:6, display:'flex', flexDirection:'column', gap:4, minWidth:170, zIndex:50 }}>
+          {xBtn(exportCSV, '#00FFB2', '📊 Prospects CSV')}
+          {xBtn(exportJSON, 'rgba(255,255,255,0.5)', '{ } Full Archive JSON')}
+          {xBtn(exportZIP, '#A259FF', '📦 All Stages ZIP')}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Parallel group config ─────────────────────────────────────
+// Groups determine which stages run concurrently in demo mode.
+const GROUPS = [[0],[1],[2],[3],[4],[5],[6],[7,8],[9],[10,12],[11]];
+
 // ── Main ──────────────────────────────────────────────────────
 
 export default function App() {
-  const [selected, setSelected] = useState(null);
-  const [stageIdx, setStageIdx] = useState(-1);
-  const [activeAgent, setActiveAgent] = useState(null);
-  const [results, setResults] = useState({});
+  const [selected, setSelected] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('automater-selected')); } catch { return null; }
+  });
+  const [activeStages, setActiveStages] = useState([]);
+  const [results, setResults] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('automater-results')) || {}; } catch { return {}; }
+  });
   const [logs, setLogs] = useState([]);
   const [running, setRunning] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(() => {
+    try { const s = JSON.parse(localStorage.getItem('automater-results')); return s && Object.keys(s).length > 0; } catch { return false; }
+  });
+  const [aiMode, setAiMode] = useState(false);
   const logBuf = useRef([]);
   const logEl = useRef(null);
   const allRef = useRef({});
 
   useEffect(() => { if (logEl.current) logEl.current.scrollTop = logEl.current.scrollHeight; }, [logs]);
+  useEffect(() => { try { localStorage.setItem('automater-results', JSON.stringify(results)); } catch {} }, [results]);
+  useEffect(() => { try { if (selected !== null) localStorage.setItem('automater-selected', JSON.stringify(selected)); } catch {} }, [selected]);
 
   const log = useCallback((msg, color) => {
     const c = color || "rgba(255,255,255,0.4)";
@@ -1354,41 +1441,18 @@ export default function App() {
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  async function runPipeline() {
-    if (selected === null || running) return;
-    const niche = NICHES[selected];
-    logBuf.current = [];
-    setLogs([]); setResults({}); setDone(false);
-    setStageIdx(-1); setActiveAgent(null);
-    allRef.current = {};
-    setRunning(true);
-    await sleep(50);
-
-    log("🚀 THE AUTOMATER — \"" + niche.label + "\"", "#00FFB2");
-    log("✗ Con: " + niche.con, "rgba(255,100,100,0.9)");
-    log("✓ Pro: " + niche.pro, "rgba(0,255,178,0.8)");
-    log("13 stages · 52 agents · full pipeline", "rgba(255,255,255,0.35)");
-
-    for (let i = 0; i < STAGES.length; i++) {
+  async function runMockGroup(indices, niche) {
+    setActiveStages(prev => [...prev, ...indices.map(i => STAGES[i].id)]);
+    await Promise.all(indices.map(async (i) => {
       const stage = STAGES[i];
-      setStageIdx(i);
-      await sleep(100);
       log("", "transparent");
       log("▶ STAGE " + (i+1) + "/" + STAGES.length + " — " + stage.title.toUpperCase(), stage.color);
-
-      for (const agent of stage.agents) {
-        setActiveAgent(agent);
-        log("  → " + agent, "rgba(255,255,255,0.25)");
-        await sleep(280);
-      }
-      setActiveAgent(null);
-
+      for (const agent of stage.agents) { log("  → " + agent, "rgba(255,255,255,0.25)"); await sleep(280); }
       if (i === 7) {
         log("  ⚡ Collecting from all 7 prior agents...", stage.color);
         const priorAgents = ["Research Agent","Strategy Agent","Build Agent","Test Agent","Optimize Agent","Implement Agent","Backtest Agent"];
         for (const a of priorAgents) { log("  📦 " + a + " → material delivered", stage.color); await sleep(180); }
-        log("  🔩 Assembling 7 interlocked modules...", stage.color);
-        await sleep(500);
+        log("  🔩 Assembling 7 interlocked modules...", stage.color); await sleep(500);
         log("  🔗 Wiring inter-module message bus...", stage.color);
       } else if (i === 8) {
         log("  🔴 Red Team active — attacking Product Forge output...", stage.color);
@@ -1401,61 +1465,91 @@ export default function App() {
         for (const p of patches) { log("  ✅ " + p, "#4ADE80"); await sleep(250); }
         log("  🔒 Red Team re-run: 0 exploits found", "#4ADE80");
       } else if (i === 10) {
-        log("  🌐 Reading all 10 agent outputs...", stage.color);
-        await sleep(400);
-        log("  🎨 Building nav, hero, pain, features, pricing, security, CTA...", stage.color);
-        await sleep(500);
-        log("  📐 Wiring responsive layouts...", stage.color);
-        await sleep(300);
+        log("  🌐 Reading all 10 agent outputs...", stage.color); await sleep(400);
+        log("  🎨 Building nav, hero, pain, features, pricing, security, CTA...", stage.color); await sleep(500);
+        log("  📐 Wiring responsive layouts...", stage.color); await sleep(300);
         log("  🔒 Integrating security score from Safety Agent...", stage.color);
       } else if (i === 11) {
-        log("  🚀 Deploy Agent receiving website from Stage 11...", stage.color);
-        await sleep(300);
-        log("  📺 Rendering live preview inside The Automater...", stage.color);
-        await sleep(400);
-        log("  ✏️  Inline editor ready — click any section to edit", stage.color);
-        await sleep(200);
+        log("  🚀 Deploy Agent receiving website from Stage 11...", stage.color); await sleep(300);
+        log("  📺 Rendering live preview inside The Automater...", stage.color); await sleep(400);
+        log("  ✏️  Inline editor ready — click any section to edit", stage.color); await sleep(200);
         log("  📦 Export package prepared for Vercel / Netlify / GitHub Pages", stage.color);
       } else if (i === 12) {
-        log("  🔍 Scanning Google Maps, Yelp, LinkedIn for target businesses...", stage.color);
-        await sleep(400);
-        log("  📡 Detecting pain signals in reviews, bios, job posts...", stage.color);
-        await sleep(350);
-        log("  🗂️  Building prioritized prospect list...", stage.color);
-        await sleep(300);
-        log("  ✉️  Generating personalized outreach sequences...", stage.color);
-        await sleep(300);
+        log("  🔍 Scanning Google Maps, Yelp, LinkedIn for target businesses...", stage.color); await sleep(400);
+        log("  📡 Detecting pain signals in reviews, bios, job posts...", stage.color); await sleep(350);
+        log("  🗂️  Building prioritized prospect list...", stage.color); await sleep(300);
+        log("  ✉️  Generating personalized outreach sequences...", stage.color); await sleep(300);
         log("  🎯 8 high-signal prospects identified. Outreach ready to send.", stage.color);
       } else {
         log("  ⚡ Synthesizing...", stage.color);
       }
       await sleep(400);
-
       const all = allRef.current;
       let result;
-      if (i === 0) result = genResearch(niche.label);
-      else if (i === 1) result = genStrategy(niche.label);
-      else if (i === 2) result = genBuild(niche.label);
-      else if (i === 3) result = genTest(niche.label);
-      else if (i === 4) result = genOptimize(niche.label);
-      else if (i === 5) result = genImplement(niche.label, all);
-      else if (i === 6) result = genBacktest(niche.label, all);
-      else if (i === 7) result = genProductForge(niche.label, all);
-      else if (i === 8) result = genRedTeam(niche.label);
-      else if (i === 9) result = genSafety(niche.label, all.redteam);
+      if (i === 0)       result = genResearch(niche.label);
+      else if (i === 1)  result = genStrategy(niche.label);
+      else if (i === 2)  result = genBuild(niche.label);
+      else if (i === 3)  result = genTest(niche.label);
+      else if (i === 4)  result = genOptimize(niche.label);
+      else if (i === 5)  result = genImplement(niche.label, all);
+      else if (i === 6)  result = genBacktest(niche.label, all);
+      else if (i === 7)  result = genProductForge(niche.label, all);
+      else if (i === 8)  result = genRedTeam(niche.label);
+      else if (i === 9)  result = genSafety(niche.label, all.redteam);
       else if (i === 10) result = genWebsite(niche.label, all);
       else if (i === 11) result = genDeploy(niche.label, all);
       else if (i === 12) result = genProspect(niche.label, all);
-
       allRef.current = { ...allRef.current, [stage.id]: result };
       setResults(r => ({ ...r, [stage.id]: result }));
+      setActiveStages(prev => prev.filter(id => id !== stage.id));
       log("  ✓ Stage " + (i+1) + " complete", "#00FFB2");
-      await sleep(220);
-    }
+    }));
+  }
 
+  async function runPipeline() {
+    if (selected === null || running) return;
+    const niche = NICHES[selected];
+    logBuf.current = [];
+    setLogs([]); setResults({}); setDone(false);
+    setActiveStages([]);
+    allRef.current = {};
+    setRunning(true);
+    await sleep(50);
+    log("🚀 THE AUTOMATER — \"" + niche.label + "\"", "#00FFB2");
+    log("✗ Con: " + niche.con, "rgba(255,100,100,0.9)");
+    log("✓ Pro: " + niche.pro, "rgba(0,255,178,0.8)");
+    log("13 stages · 52 agents · full pipeline", "rgba(255,255,255,0.35)");
+    if (aiMode) {
+      log("⚡ AI MODE — connecting to Claude API...", "#00FFB2");
+      await new Promise((resolve) => {
+        const es = new EventSource(`/api/pipeline/stream?niche=${selected}`);
+        es.addEventListener('stage-start', (e) => {
+          const { stageId } = JSON.parse(e.data);
+          const stage = STAGES.find(s => s.id === stageId);
+          if (stage) { setActiveStages(prev => [...prev, stageId]); log("▶ " + stage.title.toUpperCase(), stage.color); }
+        });
+        es.addEventListener('stage-complete', (e) => {
+          const { stageId, result } = JSON.parse(e.data);
+          setActiveStages(prev => prev.filter(id => id !== stageId));
+          allRef.current = { ...allRef.current, [stageId]: result };
+          setResults(r => ({ ...r, [stageId]: result }));
+          log("  ✓ " + stageId + " complete (Claude API)", "#00FFB2");
+        });
+        es.addEventListener('stage-error', (e) => {
+          const { stageId, error } = JSON.parse(e.data);
+          setActiveStages(prev => prev.filter(id => id !== stageId));
+          log("  ✗ " + stageId + ": " + error, "#FF4444");
+        });
+        es.addEventListener('pipeline-complete', () => { es.close(); resolve(); });
+        es.onerror = () => { es.close(); log("  SSE error — pipeline ended", "#FFD700"); resolve(); };
+      });
+    } else {
+      log("📦 DEMO MODE — running simulated pipeline...", "rgba(255,255,255,0.35)");
+      for (const group of GROUPS) { await runMockGroup(group, niche); await sleep(220); }
+    }
     log("", "transparent");
     log("✅ PIPELINE COMPLETE — Built · Hacked · Hardened · Cleared for launch.", "#FFD700");
-    setStageIdx(-1);
+    setActiveStages([]);
     setRunning(false);
     setDone(true);
   }
@@ -1475,10 +1569,15 @@ export default function App() {
           <div style={{ fontSize:7, color:"#00FFB2", letterSpacing:4, marginBottom:3 }}>ANTHROPIC · MULTI-AGENT FRAMEWORK</div>
           <div style={{ fontSize:15, fontWeight:700 }}>THE AUTOMATER <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontWeight:400 }}>13 STAGES · 52 AGENTS</span></div>
         </div>
-        <div style={{ display:"flex", gap:3, alignItems:"center", flexWrap:"wrap", maxWidth:240 }}>
-          {STAGES.map((s, i) => (
-            <div key={s.id} style={{ height:5, width: stageIdx===i ? 18 : results[s.id] ? 8 : 5, borderRadius:3, background: stageIdx===i ? s.color : results[s.id] ? s.color+"50" : "rgba(255,255,255,0.07)", boxShadow: stageIdx===i ? "0 0 6px "+s.color : "none", transition:"all 0.35s" }} />
-          ))}
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <button onClick={() => setAiMode(m => !m)} style={{ background: aiMode ? "rgba(0,255,178,0.08)" : "rgba(255,255,255,0.03)", border:"1px solid "+(aiMode?"#00FFB2":"rgba(255,255,255,0.08)"), borderRadius:6, color: aiMode ? "#00FFB2" : "rgba(255,255,255,0.3)", fontSize:8, padding:"5px 12px", cursor:"pointer", fontFamily:"monospace", letterSpacing:1 }}>
+            {aiMode ? "⚡ AI MODE" : "📦 DEMO"}
+          </button>
+          <div style={{ display:"flex", gap:3, alignItems:"center", flexWrap:"wrap", maxWidth:240 }}>
+            {STAGES.map((s) => (
+              <div key={s.id} style={{ height:5, width: activeStages.includes(s.id) ? 18 : results[s.id] ? 8 : 5, borderRadius:3, background: activeStages.includes(s.id) ? s.color : results[s.id] ? s.color+"50" : "rgba(255,255,255,0.07)", boxShadow: activeStages.includes(s.id) ? "0 0 6px "+s.color : "none", transition:"all 0.35s" }} />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -1507,7 +1606,7 @@ export default function App() {
 
         <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
           {STAGES.map((stage, i) => {
-            const active = stageIdx === i;
+            const active = activeStages.includes(stage.id);
             const complete = !!results[stage.id];
             return (
               <div key={stage.id} style={{ background: active ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,0.01)", border:"1px solid "+(active?stage.color+"40":complete?stage.color+"1A":"rgba(255,255,255,0.04)"), borderRadius:11, padding:"16px 18px", boxShadow: active ? "0 0 20px "+stage.color+"0A" : "none", transition:"all 0.35s", position:"relative" }}>
@@ -1522,7 +1621,7 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(148px,1fr))", gap:5 }}>
-                  {stage.agents.map(a => <Pill key={a} name={a} active={active && activeAgent===a} done={complete} color={stage.color} />)}
+                  {stage.agents.map(a => <Pill key={a} name={a} active={active} done={complete} color={stage.color} />)}
                 </div>
                 <StageOutput stage={stage} data={results[stage.id]} />
               </div>
@@ -1547,11 +1646,12 @@ export default function App() {
         {done && (
           <div style={{ marginTop:18, padding:"18px 22px", textAlign:"center", background:"rgba(0,255,178,0.02)", border:"1px solid rgba(0,255,178,0.14)", borderRadius:11, animation:"rise 0.5s ease" }}>
             <div style={{ fontSize:15, fontWeight:700, color:"#00FFB2", marginBottom:6 }}>THE AUTOMATER — PIPELINE COMPLETE</div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", lineHeight:2 }}>
+            <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", lineHeight:2, marginBottom:14 }}>
               13 stages · 52 agents<br />
               Research → Strategy → Build → Test → Optimize → Implement → Backtest → Forge → Red Team → Safety → Website → Deploy → Prospect<br />
               Con eliminated · Product built · Hacked · Hardened · Website live · Prospects found · Ready to ship
             </div>
+            {selected !== null && <ExportMenu results={results} niche={NICHES[selected].label} />}
           </div>
         )}
       </div>
