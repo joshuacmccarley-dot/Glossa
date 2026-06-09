@@ -2,7 +2,7 @@ import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import AegisBlueprint from './AegisBlueprint.jsx'
+import Aegis from './Aegis.jsx'
 
 function Root() {
   const [view, setView] = useState(() =>
@@ -18,7 +18,7 @@ function Root() {
   const goAegis     = () => { window.location.hash = '#aegis';     setView('aegis'); };
   const goAutomater = () => { window.location.hash = '#automater'; setView('automater'); };
 
-  if (view === 'aegis') return <AegisBlueprint onBack={goAutomater} />;
+  if (view === 'aegis') return <Aegis onBack={goAutomater} />;
   return <App onViewAegis={goAegis} />;
 }
 

@@ -9,6 +9,7 @@ import {
   rateLimiter, sseGuard, securityHeaders,
   circuitBreaker, auditLog, getAuditLog, errorHandler,
 } from './security.js';
+import { createAegisRouter } from './aegis.js';
 
 export const NICHES = [
   "Independent Restaurants", "Boutique Law Firms",   "Auto Repair Shops",
@@ -196,6 +197,8 @@ export function createApp({ claudeOverride = null, allowedOrigins = null, adminT
     const last = Math.min(parseInt(req.query.last || '50', 10), 500);
     res.json({ entries: getAuditLog(last), total: last });
   });
+
+  app.use('/api/aegis', createAegisRouter(callClaude));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));
   app.use(errorHandler);
