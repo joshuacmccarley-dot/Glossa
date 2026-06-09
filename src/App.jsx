@@ -1410,7 +1410,7 @@ const GROUPS = [[0],[1],[2],[3],[4],[5],[6],[7,8],[9],[10,12],[11]];
 
 // ── Main ──────────────────────────────────────────────────────
 
-export default function App() {
+export default function App({ onViewAegis }) {
   const [selected, setSelected] = useState(() => {
     try { return JSON.parse(localStorage.getItem('automater-selected')); } catch { return null; }
   });
@@ -1570,6 +1570,11 @@ export default function App() {
           <div style={{ fontSize:15, fontWeight:700 }}>THE AUTOMATER <span style={{ fontSize:9, color:"rgba(255,255,255,0.25)", fontWeight:400 }}>13 STAGES · 52 AGENTS</span></div>
         </div>
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {onViewAegis && (
+            <button onClick={onViewAegis} style={{ background:"rgba(61,255,160,0.06)", border:"1px solid rgba(61,255,160,0.2)", borderRadius:6, color:"#3dffa0", fontSize:8, padding:"5px 12px", cursor:"pointer", fontFamily:"monospace", letterSpacing:1 }}>
+              🛡 AEGIS
+            </button>
+          )}
           <button onClick={() => setAiMode(m => !m)} style={{ background: aiMode ? "rgba(0,255,178,0.08)" : "rgba(255,255,255,0.03)", border:"1px solid "+(aiMode?"#00FFB2":"rgba(255,255,255,0.08)"), borderRadius:6, color: aiMode ? "#00FFB2" : "rgba(255,255,255,0.3)", fontSize:8, padding:"5px 12px", cursor:"pointer", fontFamily:"monospace", letterSpacing:1 }}>
             {aiMode ? "⚡ AI MODE" : "📦 DEMO"}
           </button>
