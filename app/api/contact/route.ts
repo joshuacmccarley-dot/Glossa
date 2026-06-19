@@ -1,46 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/* ─── Simple in-memory rate limiter ──────────────────────────────
-   Tracks requests per IP. Resets per process lifetime.
-   For production, replace with Redis or Upstash.             */
+/* ─── Valid product allowlist ─────────────────────────────────── */
+const VALID_PRODUCTS = new Set([
+  "reta", "ghk-cu", "bac-water", "tesa", "mots-c", "mt2", "cjc-ipa",
+  "reta-kit", "ghk-kit", "mt2-kit", "cjc-ipa-kit", "tesa-kit", "multiple",
+]);
+
+/* ─── In-memory rate limiter ──────────────────────────────────────
+   Capped at 500 entries to prevent unbounded memory growth.
+   For production, replace with Redis or Upstash.               */
+const MAX_RATE_ENTRIES = 500;
 const rateMap = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const window = 60_000; // 1 minute
+function pruneRateMap(now: number) {
+  if (rateMap.size < MAX_RATE_ENTRIES) return;
+  for (const [key, entry] of rateMap) {
+    if (entry.resetAt < now) rateMap.delete(key);
+  }
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter: number } {
+  const now    = Date.now();
+  const window = 60_000;
   const limit  = 5;
+
+  pruneRateMap(now);
 
   const entry = rateMap.get(ip);
   if (!entry || entry.resetAt < now) {
     rateMap.set(ip, { count: 1, resetAt: now + window });
-    return true;
+    return { allowed: true, retryAfter: 0 };
   }
-  if (entry.count >= limit) return false;
+  if (entry.count >= limit) {
+    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
+  }
   entry.count++;
-  return true;
+  return { allowed: true, retryAfter: 0 };
 }
 
-/* ─── Validation ──────────────────────────────────────────────── */
+/* ─── Sanitization & validation ──────────────────────────────── */
+function stripHtml(str: string): string {
+  return str.replace(/<[^>]*>/g, "").replace(/&(?:[a-z]+|#\d+);/gi, " ");
+}
+
+function sanitize(str: string): string {
+  return stripHtml(String(str).trim()).slice(0, 2000);
+}
+
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function sanitize(str: string): string {
-  return String(str).trim().slice(0, 2000);
-}
-
 /* ─── POST /api/contact ───────────────────────────────────────── */
 export async function POST(req: NextRequest) {
+  // Enforce application/json content type
+  const ct = req.headers.get("content-type") ?? "";
+  if (!ct.includes("application/json")) {
+    return NextResponse.json(
+      { success: false, message: "Invalid content type." },
+      { status: 415 }
+    );
+  }
+
   // IP-based rate limiting
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  if (!checkRateLimit(ip)) {
+  const { allowed, retryAfter } = checkRateLimit(ip);
+  if (!allowed) {
     return NextResponse.json(
       { success: false, message: "Too many requests. Please wait a minute." },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
     );
   }
 
@@ -55,14 +87,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Field extraction + sanitization
-  const name     = sanitize((body.name     as string) ?? "");
-  const email    = sanitize((body.email    as string) ?? "");
-  const product  = sanitize((body.product  as string) ?? "");
-  const quantity = sanitize((body.quantity as string) ?? "1");
-  const message  = sanitize((body.message  as string) ?? "");
+  // Honeypot — always empty for real users; bots fill it in
+  if (body._hp && String(body._hp).trim().length > 0) {
+    return NextResponse.json(
+      { success: true, message: "Your inquiry has been received. We'll respond within 24 hours." },
+      { status: 200 }
+    );
+  }
 
-  // Validation
+  // Field extraction + HTML stripping
+  const name    = sanitize((body.name    as string) ?? "");
+  const email   = sanitize((body.email   as string) ?? "");
+  const product = sanitize((body.product as string) ?? "");
+  const message = sanitize((body.message as string) ?? "");
+
+  // Quantity: must be an integer 1–100
+  const rawQty  = Number(body.quantity);
+  const quantity = Number.isInteger(rawQty) && rawQty >= 1 && rawQty <= 100 ? rawQty : 1;
+
+  // Field validation
   if (!name || name.length < 2) {
     return NextResponse.json(
       { success: false, message: "Please provide your full name." },
@@ -75,9 +118,9 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
-  if (!product) {
+  if (!product || !VALID_PRODUCTS.has(product)) {
     return NextResponse.json(
-      { success: false, message: "Please select a product of interest." },
+      { success: false, message: "Please select a valid product of interest." },
       { status: 422 }
     );
   }
@@ -86,8 +129,7 @@ export async function POST(req: NextRequest) {
      Swap the console.log below for your email provider:
      - Nodemailer: nodemailer.createTransport(...)
      - Resend:     resend.emails.send(...)
-     - SendGrid:   @sendgrid/mail
-     All are drop-in replacements for this log block.          */
+     - SendGrid:   @sendgrid/mail                               */
   console.log("[Lone Star Peptides] New inquiry:", {
     timestamp: new Date().toISOString(),
     name,
@@ -99,15 +141,12 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(
-    {
-      success: true,
-      message: "Your inquiry has been received. We'll respond within 24 hours.",
-    },
+    { success: true, message: "Your inquiry has been received. We'll respond within 24 hours." },
     { status: 200 }
   );
 }
 
-/* Disallow GET */
+/* Disallow all other methods */
 export async function GET() {
   return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }

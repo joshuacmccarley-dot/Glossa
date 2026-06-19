@@ -9,6 +9,7 @@ interface FormData {
   product: string;
   quantity: string;
   message: string;
+  _hp: string;
 }
 
 interface FormState {
@@ -22,6 +23,7 @@ const INITIAL: FormData = {
   product: "",
   quantity: "1",
   message: "",
+  _hp: "",
 };
 
 export default function ContactSection() {
@@ -204,9 +206,23 @@ export default function ContactSection() {
               <SuccessState message={state.message} onReset={() => setState({ status: "idle", message: "" })} />
             ) : (
               <form onSubmit={handleSubmit} noValidate aria-label="Research inquiry form">
+                {/* Honeypot — hidden from real users; bots fill this in */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", overflow: "hidden" }}>
+                  <label htmlFor="hp_field">Leave this blank</label>
+                  <input
+                    id="hp_field"
+                    name="_hp"
+                    type="text"
+                    value={form._hp}
+                    onChange={handleChange}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   {/* Name + Email row */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div className="form-name-email" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                     <div>
                       <label htmlFor={`${uid}-name`} style={labelStyle}>
                         Full Name <span aria-hidden="true" style={{ color: "#c41230" }}>*</span>
@@ -373,6 +389,11 @@ export default function ContactSection() {
           .contact-grid {
             grid-template-columns: 1fr !important;
             gap: 48px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .form-name-email {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>

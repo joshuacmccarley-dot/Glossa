@@ -5,10 +5,13 @@ import { useEffect, useRef } from "react";
 export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  /* Subtle particle canvas */
+  /* Subtle particle canvas — skipped when user prefers reduced motion */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
