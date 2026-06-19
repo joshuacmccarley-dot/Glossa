@@ -228,25 +228,54 @@ export default function Footer() {
 }
 
 function LoneStarMini() {
+  const pts = "40,8 48,30 70,30 52,44 59,66 40,53 21,66 28,44 10,30 32,30";
   return (
     <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="40" cy="40" r="38" stroke="#c41230" strokeWidth="1.5" opacity="0.5" />
-      <clipPath id="fl">
-        <rect x="0" y="0" width="40" height="80" />
-      </clipPath>
-      <clipPath id="fr">
-        <rect x="40" y="0" width="40" height="80" />
-      </clipPath>
-      <polygon
-        points="40,12 46.5,30 66,30 51,41 57,59 40,48 23,59 29,41 14,30 33.5,30"
-        fill="#1a3a8f"
-        clipPath="url(#fl)"
+      <defs>
+        <linearGradient id="foot-ring" x1="0" y1="0.5" x2="1" y2="0.5">
+          <stop offset="0%"   stopColor="#1a3a8f"/>
+          <stop offset="40%"  stopColor="#c0c8d8"/>
+          <stop offset="60%"  stopColor="#dde2ec"/>
+          <stop offset="100%" stopColor="#c41230"/>
+        </linearGradient>
+        <linearGradient id="foot-blue" x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#2c5cd4"/>
+          <stop offset="100%" stopColor="#0b1e60"/>
+        </linearGradient>
+        <linearGradient id="foot-silver" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="#ffffff"/>
+          <stop offset="60%"  stopColor="#c8d0e0"/>
+          <stop offset="100%" stopColor="#8898b0"/>
+        </linearGradient>
+        <linearGradient id="foot-red" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="#d81535"/>
+          <stop offset="100%" stopColor="#640918"/>
+        </linearGradient>
+        <clipPath id="foot-cl"><rect x="0"  y="0"  width="40" height="80"/></clipPath>
+        <clipPath id="foot-ctr"><rect x="40" y="0"  width="40" height="40"/></clipPath>
+        <clipPath id="foot-cbr"><rect x="40" y="40" width="40" height="40"/></clipPath>
+      </defs>
+
+      <circle cx="40" cy="40" r="37.5" fill="#0a0a0a" stroke="url(#foot-ring)" strokeWidth="3"/>
+      <polygon points={pts} fill="url(#foot-blue)"   clipPath="url(#foot-cl)"/>
+      <polygon points={pts} fill="url(#foot-silver)"  clipPath="url(#foot-ctr)"/>
+      <polygon points={pts} fill="url(#foot-red)"     clipPath="url(#foot-cbr)"/>
+      <polygon points={pts} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth="0.7"/>
+      <path
+        d="M39.5,12 C44.5,18 44.5,24 39.5,29.5 C34.5,35 34.5,40 39.5,45 C44.5,50 44.5,56 39.5,61 C36,64 38.5,66.5 39.5,67"
+        stroke="rgba(255,255,255,0.95)" strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
-      <polygon
-        points="40,12 46.5,30 66,30 51,41 57,59 40,48 23,59 29,41 14,30 33.5,30"
-        fill="#c41230"
-        clipPath="url(#fr)"
+      <path
+        d="M40.5,12 C35.5,18 35.5,24 40.5,29.5 C45.5,35 45.5,40 40.5,45 C35.5,50 35.5,56 40.5,61 C44,64 41.5,66.5 40.5,67"
+        stroke="rgba(255,255,255,0.45)" strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
+      <line x1="37.5" y1="19"   x2="42.5" y2="19"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="25"   x2="43.5" y2="25"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="37"   y1="31.5" x2="43"   y2="31.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="38"   x2="43.5" y2="38"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="44.5" x2="43.5" y2="44.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="51"   x2="43.5" y2="51"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="37"   y1="57.5" x2="43"   y2="57.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
     </svg>
   );
 }

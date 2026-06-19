@@ -29,6 +29,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* offset for 72px fixed navbar */
   scrollbar-width: thin;
   scrollbar-color: #333 #111;
 }

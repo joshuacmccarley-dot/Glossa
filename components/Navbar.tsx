@@ -10,9 +10,9 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
-  const [scrolled,    setScrolled]    = useState(false);
-  const [menuOpen,    setMenuOpen]    = useState(false);
-  const [activeLink,  setActiveLink]  = useState("");
+  const [scrolled,   setScrolled]   = useState(false);
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const [activeLink, setActiveLink] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -24,8 +24,7 @@ export default function Navbar() {
     e.preventDefault();
     setActiveLink(href);
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    el?.scrollIntoView({ behavior: "smooth" });
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -33,18 +32,12 @@ export default function Navbar() {
       role="banner"
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
+        top: 0, left: 0, right: 0,
         zIndex: 100,
         transition: "background 0.3s ease, border-color 0.3s ease",
-        background: scrolled
-          ? "rgba(8,8,8,0.95)"
-          : "transparent",
+        background: scrolled ? "rgba(8,8,8,0.95)" : "transparent",
         backdropFilter: scrolled ? "blur(20px)" : "none",
-        borderBottom: scrolled
-          ? "1px solid rgba(255,255,255,0.07)"
-          : "1px solid transparent",
+        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "1px solid transparent",
       }}
     >
       <nav
@@ -64,14 +57,9 @@ export default function Navbar() {
           href="#"
           aria-label="Lone Star Peptides — home"
           onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            textDecoration: "none",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}
         >
-          <LoneStarIcon size={36} />
+          <LoneStarIcon size={40} />
           <div style={{ lineHeight: 1 }}>
             <span style={{
               display: "block",
@@ -96,16 +84,11 @@ export default function Navbar() {
           </div>
         </a>
 
-        {/* Desktop links */}
+        {/* Desktop nav — display controlled entirely by CSS below */}
         <ul
           role="list"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            listStyle: "none",
-          }}
-          className="hidden md:flex"
+          className="nav-desktop-links"
+          style={{ alignItems: "center", gap: "8px", listStyle: "none" }}
         >
           {NAV_LINKS.map(({ href, label }) => (
             <li key={href}>
@@ -147,15 +130,14 @@ export default function Navbar() {
           </li>
         </ul>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — display controlled entirely by CSS below */}
         <button
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="md:hidden"
+          className="nav-hamburger"
           style={{
-            display: "flex",
             flexDirection: "column",
             gap: "5px",
             padding: "8px",
@@ -190,7 +172,7 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile slide-down menu */}
       <div
         id="mobile-menu"
         role="navigation"
@@ -237,63 +219,87 @@ export default function Navbar() {
           </li>
         </ul>
       </div>
+
+      {/* Responsive breakpoint — CSS wins over inline display */}
+      <style>{`
+        .nav-desktop-links { display: none; }
+        .nav-hamburger      { display: flex; }
+        @media (min-width: 768px) {
+          .nav-desktop-links { display: flex; }
+          .nav-hamburger      { display: none;  }
+        }
+      `}</style>
     </header>
   );
 }
 
+/* ─── Brand logo SVG ─────────────────────────────────────────────
+   Three-zone Texas star (blue left / silver top-right / red bottom-right)
+   with a DNA double-helix running through the centre.            */
 function LoneStarIcon({ size = 40 }: { size?: number }) {
+  const pts = "40,8 48,30 70,30 52,44 59,66 40,53 21,66 28,44 10,30 32,30";
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 80 80"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
+    <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        {/* Ring gradient: blue → silver → red */}
+        <linearGradient id="nav-ring" x1="0" y1="0.5" x2="1" y2="0.5">
+          <stop offset="0%"   stopColor="#1a3a8f"/>
+          <stop offset="40%"  stopColor="#c0c8d8"/>
+          <stop offset="60%"  stopColor="#dde2ec"/>
+          <stop offset="100%" stopColor="#c41230"/>
+        </linearGradient>
+        {/* Left zone gradient (blue) */}
+        <linearGradient id="nav-blue" x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#2c5cd4"/>
+          <stop offset="100%" stopColor="#0b1e60"/>
+        </linearGradient>
+        {/* Top-right zone gradient (silver / white) */}
+        <linearGradient id="nav-silver" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="#ffffff"/>
+          <stop offset="60%"  stopColor="#c8d0e0"/>
+          <stop offset="100%" stopColor="#8898b0"/>
+        </linearGradient>
+        {/* Bottom-right zone gradient (red) */}
+        <linearGradient id="nav-red" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stopColor="#d81535"/>
+          <stop offset="100%" stopColor="#640918"/>
+        </linearGradient>
+        {/* Clip regions for the three star zones */}
+        <clipPath id="nav-cl"><rect x="0"  y="0"  width="40" height="80"/></clipPath>
+        <clipPath id="nav-ctr"><rect x="40" y="0"  width="40" height="40"/></clipPath>
+        <clipPath id="nav-cbr"><rect x="40" y="40" width="40" height="40"/></clipPath>
+      </defs>
+
       {/* Outer ring */}
-      <circle cx="40" cy="40" r="38" stroke="#c41230" strokeWidth="1.5" opacity="0.6" />
-      <circle cx="40" cy="40" r="34" stroke="#1a3a8f" strokeWidth="0.5" opacity="0.4" />
+      <circle cx="40" cy="40" r="37.5" fill="#0a0a0a" stroke="url(#nav-ring)" strokeWidth="3"/>
+      <circle cx="40" cy="40" r="34.5" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
 
-      {/* Texas-style two-tone star — left blue, right red */}
-      <clipPath id="starLeft">
-        <rect x="0" y="0" width="40" height="80" />
-      </clipPath>
-      <clipPath id="starRight">
-        <rect x="40" y="0" width="40" height="80" />
-      </clipPath>
+      {/* Star — three colour zones */}
+      <polygon points={pts} fill="url(#nav-blue)"   clipPath="url(#nav-cl)"/>
+      <polygon points={pts} fill="url(#nav-silver)"  clipPath="url(#nav-ctr)"/>
+      <polygon points={pts} fill="url(#nav-red)"     clipPath="url(#nav-cbr)"/>
+      {/* Crisp edge between zones */}
+      <polygon points={pts} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth="0.7"/>
 
-      {/* Star path */}
-      <polygon
-        points="40,12 46.5,30 66,30 51,41 57,59 40,48 23,59 29,41 14,30 33.5,30"
-        fill="#1a3a8f"
-        clipPath="url(#starLeft)"
-      />
-      <polygon
-        points="40,12 46.5,30 66,30 51,41 57,59 40,48 23,59 29,41 14,30 33.5,30"
-        fill="#c41230"
-        clipPath="url(#starRight)"
-      />
-
-      {/* DNA helix center — simplified */}
+      {/* DNA primary strand */}
       <path
-        d="M38 22 C38 22, 42 27, 38 32 C34 37, 38 42, 38 42 C38 42, 42 47, 38 52 C34 57, 38 62, 38 62"
-        stroke="rgba(255,255,255,0.6)"
-        strokeWidth="1.2"
-        fill="none"
-        strokeLinecap="round"
+        d="M39.5,12 C44.5,18 44.5,24 39.5,29.5 C34.5,35 34.5,40 39.5,45 C44.5,50 44.5,56 39.5,61 C36,64 38.5,66.5 39.5,67"
+        stroke="rgba(255,255,255,0.95)" strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
+      {/* DNA secondary strand */}
       <path
-        d="M42 22 C42 22, 38 27, 42 32 C46 37, 42 42, 42 42 C42 42, 38 47, 42 52 C46 57, 42 62, 42 62"
-        stroke="rgba(255,255,255,0.4)"
-        strokeWidth="1.2"
-        fill="none"
-        strokeLinecap="round"
+        d="M40.5,12 C35.5,18 35.5,24 40.5,29.5 C45.5,35 45.5,40 40.5,45 C35.5,50 35.5,56 40.5,61 C44,64 41.5,66.5 40.5,67"
+        stroke="rgba(255,255,255,0.45)" strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
-      {/* Horizontal crossbars */}
-      {[28, 37, 46, 55].map((y) => (
-        <line key={y} x1="37" y1={y} x2="43" y2={y} stroke="rgba(255,255,255,0.35)" strokeWidth="1" />
-      ))}
+      {/* Horizontal crossbars (ladder rungs) */}
+      <line x1="37.5" y1="19"   x2="42.5" y2="19"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="25"   x2="43.5" y2="25"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="37"   y1="31.5" x2="43"   y2="31.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="38"   x2="43.5" y2="38"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="44.5" x2="43.5" y2="44.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="36.5" y1="51"   x2="43.5" y2="51"   stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="37"   y1="57.5" x2="43"   y2="57.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
+      <line x1="37.5" y1="63.5" x2="42.5" y2="63.5" stroke="rgba(255,255,255,0.7)" strokeWidth="1"/>
     </svg>
   );
 }
