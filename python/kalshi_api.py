@@ -298,6 +298,21 @@ async def _signed_request(
     raise RuntimeError("exhausted retries without response")
 
 
+async def get_exchange_status() -> dict:
+    """
+    GET /trade-api/v2/exchange/status
+    Returns {"exchange_active": bool, "trading_active": bool}.
+    trading_active=False means Kalshi has halted trading (maintenance / holiday).
+    """
+    try:
+        data = await _pub_get(f"{PUBLIC_BASE}/exchange/status")
+        if isinstance(data, dict):
+            return data
+    except Exception as e:
+        logger.debug(f"exchange/status fetch failed: {e}")
+    return {"exchange_active": True, "trading_active": True}
+
+
 async def get_balance() -> dict:
     return await _signed_request("GET", "/portfolio/balance")
 

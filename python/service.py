@@ -488,6 +488,8 @@ async def _scanner_and_trader_loop() -> None:
     last_cleanup = 0.0
     last_stats_push = asyncio.get_event_loop().time()
     last_swarm_leader = asyncio.get_event_loop().time()
+    last_exchange_check = 0.0
+    _exchange_trading_active = True
 
     try:
         cnt = await scanner.sync_markets(max_pages=10)
@@ -502,6 +504,29 @@ async def _scanner_and_trader_loop() -> None:
 
         if STATE.paused:
             await asyncio.sleep(1)
+            continue
+
+        # Exchange status gate — pause trading if Kalshi halts (maintenance/holiday)
+        try:
+            if now - last_exchange_check >= 60.0:
+                status = await kalshi_api.get_exchange_status()
+                was_active = _exchange_trading_active
+                _exchange_trading_active = bool(status.get("trading_active", True))
+                last_exchange_check = now
+                if not _exchange_trading_active and was_active:
+                    logger.warning(
+                        "[exchange] trading_active=false — Kalshi has halted trading. "
+                        "Swarm paused until exchange reopens."
+                    )
+                    await emit_event("exchange:halted", status)
+                elif _exchange_trading_active and not was_active:
+                    logger.info("[exchange] trading_active=true — exchange reopened, resuming.")
+                    await emit_event("exchange:resumed", status)
+        except Exception as e:
+            logger.debug(f"exchange status check failed: {e}")
+
+        if not _exchange_trading_active:
+            await asyncio.sleep(30)
             continue
 
         try:
@@ -1255,6 +1280,10 @@ async def _h_factoryReset(_p: dict) -> dict:
     return {"ok": True, "deleted": summary}
 
 
+async def _h_exchangeStatus(_p: dict) -> dict:
+    return await kalshi_api.get_exchange_status()
+
+
 async def _h_swarmLeaderReport(_p: dict) -> dict:
     env = kalshi_auth.get_env()
     with db.get_db() as conn:
@@ -1305,6 +1334,7 @@ async def _h_kalshiMarketUrl(p: dict) -> dict:
 
 _HANDLERS = {
     "ping": _h_ping,
+    "exchangeStatus": _h_exchangeStatus,
     "swarmLeaderReport": _h_swarmLeaderReport,
     "swarmStatus": _h_swarmStatus,
     "crypto15m": _h_crypto15m,
