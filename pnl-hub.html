@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krypt-Trader | P&L Hub</title>
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16171a;
+    --surface2: #1e2025;
+    --border: #2a2d35;
+    --accent: #6c5ce7;
+    --accent2: #00cec9;
+    --green: #00b894;
+    --red: #d63031;
+    --yellow: #fdcb6e;
+    --text: #e8eaf0;
+    --muted: #7b8099;
+    --card-radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  header .logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  header .logo span { color: var(--accent); }
+  header .env-badge {
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    background: rgba(108,92,231,0.15); color: var(--accent); border: 1px solid rgba(108,92,231,0.3);
+  }
+  header .swarm-status {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+  }
+  header .swarm-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .main { max-width: 1280px; margin: 0 auto; padding: 28px 32px; }
+
+  /* KPI Strip */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius);
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .kpi-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kpi-value.positive { color: var(--green); }
+  .kpi-value.negative { color: var(--red); }
+  .kpi-value.neutral { color: var(--text); }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* Grid layout */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .span2 { grid-column: span 2; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--card-radius); padding: 20px;
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(0,206,201,0.1); color: var(--accent2); border: 1px solid rgba(0,206,201,0.25);
+  }
+
+  /* Mini chart bars */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar {
+    width: 100%; border-radius: 4px 4px 0 0; min-height: 4px;
+    transition: height 0.3s ease; position: relative; cursor: pointer;
+  }
+  .bar:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; z-index: 10;
+  }
+  .bar.green { background: var(--green); }
+  .bar.red { background: var(--red); }
+  .bar-label { font-size: 9px; color: var(--muted); }
+
+  /* Category breakdown */
+  .category-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .category-row:last-child { border-bottom: none; }
+  .cat-name { width: 110px; font-size: 13px; text-transform: capitalize; }
+  .cat-bar-wrap { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .cat-bar { height: 100%; border-radius: 3px; }
+  .cat-pnl { width: 80px; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cat-wr { width: 50px; text-align: right; font-size: 12px; color: var(--muted); }
+
+  /* Positions table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 12px; border-bottom: 1px solid rgba(42,45,53,0.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .status-pill {
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .status-filled { background: rgba(0,184,148,0.1); color: var(--green); }
+  .status-submitted { background: rgba(253,203,110,0.1); color: var(--yellow); }
+  .status-won { background: rgba(0,184,148,0.15); color: var(--green); }
+  .status-lost { background: rgba(214,48,49,0.1); color: var(--red); }
+
+  /* Swarm Leader panel */
+  .leader-panel {
+    background: linear-gradient(135deg, rgba(108,92,231,0.08), rgba(0,206,201,0.05));
+    border: 1px solid rgba(108,92,231,0.25); border-radius: var(--card-radius); padding: 20px;
+  }
+  .leader-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .leader-icon { font-size: 22px; }
+  .leader-title { font-size: 15px; font-weight: 700; }
+  .leader-sub { font-size: 12px; color: var(--muted); }
+  .suggestion { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .suggestion:last-child { border-bottom: none; }
+  .suggestion-num { font-size: 11px; color: var(--accent); font-weight: 700; min-width: 20px; }
+  .suggestion-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+  /* Roadmap */
+  .phase-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .phase-row:last-child { border-bottom: none; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .phase-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .phase-dot.pending { background: var(--border); }
+  .phase-title { font-size: 13px; font-weight: 600; }
+  .phase-detail { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .phase-badge {
+    margin-left: auto; font-size: 11px; padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .phase-badge.active { background: rgba(0,184,148,0.1); color: var(--green); }
+  .phase-badge.pending { background: var(--surface2); color: var(--muted); }
+
+  /* Footer */
+  footer { text-align: center; padding: 24px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Krypt<span>Trader</span></div>
+  <div class="env-badge">Demo</div>
+  <div class="swarm-status">
+    <div class="swarm-dot"></div>
+    Swarm Active — 3 workers
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- KPI Strip -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Total Balance</div>
+      <div class="kpi-value neutral" id="kpi-balance">$10.00</div>
+      <div class="kpi-sub">Demo account</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Session P&L</div>
+      <div class="kpi-value" id="kpi-session-pnl">$0.00</div>
+      <div class="kpi-sub" id="kpi-session-roi">+0.0% ROI</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value neutral" id="kpi-wr">—</div>
+      <div class="kpi-sub" id="kpi-wl">0W / 0L</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Open Positions</div>
+      <div class="kpi-value neutral" id="kpi-open">0</div>
+      <div class="kpi-sub">of 3 max</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Today P&L</div>
+      <div class="kpi-value" id="kpi-today-pnl">$0.00</div>
+      <div class="kpi-sub">Daily stop: -$2.00</div>
+    </div>
+  </div>
+
+  <!-- P&L Chart + Category Breakdown -->
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">7-Day P&L History</span>
+        <span class="card-badge">Live</span>
+      </div>
+      <div class="bar-chart" id="pnl-bars">
+        <!-- bars injected by JS -->
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px">
+        <span style="font-size:11px;color:var(--muted)">7d ago</span>
+        <span style="font-size:11px;color:var(--muted)">Today</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">P&L by Category</span>
+      </div>
+      <div id="category-list">
+        <!-- injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Swarm Leader + Roadmap -->
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="leader-panel">
+      <div class="leader-header">
+        <div class="leader-icon">🧠</div>
+        <div>
+          <div class="leader-title">Swarm Leader</div>
+          <div class="leader-sub" id="leader-timestamp">Initialising…</div>
+        </div>
+      </div>
+      <div id="leader-suggestions">
+        <div class="suggestion">
+          <div class="suggestion-num">1</div>
+          <div class="suggestion-text">No trades have resolved yet. Once signals fire, the Swarm Leader will analyse win rate by category and suggest confidence gate adjustments here.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Capital Roadmap</span>
+      </div>
+      <div class="phase-row">
+        <div class="phase-dot active"></div>
+        <div>
+          <div class="phase-title">Phase 1 — Demo Validation</div>
+          <div class="phase-detail">$10 seed · $1/trade · target ≥75% win rate on ≥15 resolved</div>
+        </div>
+        <div class="phase-badge active">Active</div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-dot pending"></div>
+        <div>
+          <div class="phase-title">Phase 2 — Seed ($1 000)</div>
+          <div class="phase-detail">$20 max position · Kelly half · target $150-300/month</div>
+        </div>
+        <div class="phase-badge pending">Locked</div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-dot pending"></div>
+        <div>
+          <div class="phase-title">Phase 3 — Scale ($10 000)</div>
+          <div class="phase-detail">$100 max position · target $1 500-3 000/month</div>
+        </div>
+        <div class="phase-badge pending">Locked</div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-dot pending"></div>
+        <div>
+          <div class="phase-title">Phase 4 — Full Deploy ($50 000)</div>
+          <div class="phase-detail">$200-300 max position · 25 concurrent · $8-15k/month</div>
+        </div>
+        <div class="phase-badge pending">Locked</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Positions -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Positions</span>
+      <span class="card-badge" id="positions-count">0 trades</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Market</th>
+          <th>Side</th>
+          <th>Source</th>
+          <th>Confidence</th>
+          <th>Cost</th>
+          <th>P&L</th>
+          <th>Status</th>
+          <th>Opened</th>
+        </tr>
+      </thead>
+      <tbody id="positions-body">
+        <tr>
+          <td colspan="8" style="text-align:center;color:var(--muted);padding:32px">
+            Waiting for first trades from swarm signals…
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  Krypt-Trader Swarm P&L Hub · Demo Mode · Data refreshes every 30s
+  &nbsp;·&nbsp;
+  <strong style="color:var(--accent)">Swarm Demo Micro</strong> preset active
+</footer>
+
+<script>
+// ---- Demo data seed (replace with live backend WebSocket/polling) ----
+
+const DEMO_BALANCE = 10.00;
+
+// Simulated 7-day daily P&L history (replace with real pnl-series data)
+const pnlHistory = [
+  { day: "Mon", pnl: 0 },
+  { day: "Tue", pnl: 0 },
+  { day: "Wed", pnl: 0 },
+  { day: "Thu", pnl: 0 },
+  { day: "Fri", pnl: 0 },
+  { day: "Sat", pnl: 0 },
+  { day: "Sun", pnl: 0 },
+];
+
+const categoryData = [
+  { name: "crypto",  pnl: 0.00, wr: 0, trades: 0 },
+  { name: "sports",  pnl: 0.00, wr: 0, trades: 0 },
+  { name: "politics",pnl: 0.00, wr: 0, trades: 0 },
+  { name: "world",   pnl: 0.00, wr: 0, trades: 0 },
+];
+
+const positions = []; // will be populated from backend
+
+// ---- Render helpers ----
+
+function colorClass(v) { return v > 0 ? 'positive' : v < 0 ? 'negative' : 'neutral'; }
+function fmt(v, prefix='$') {
+  const sign = v >= 0 ? '+' : '';
+  return `${prefix}${sign}${Math.abs(v).toFixed(2)}`;
+}
+
+function renderKPIs(data) {
+  const balance = data.balance ?? DEMO_BALANCE;
+  const sessionPnl = data.sessionPnl ?? 0;
+  const roi = data.roi ?? 0;
+  const wins = data.wins ?? 0;
+  const losses = data.losses ?? 0;
+  const open = data.open ?? 0;
+  const todayPnl = data.todayPnl ?? 0;
+  const total = wins + losses;
+  const wr = total > 0 ? (wins / total * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('kpi-balance').textContent = `$${balance.toFixed(2)}`;
+  const spEl = document.getElementById('kpi-session-pnl');
+  spEl.textContent = fmt(sessionPnl);
+  spEl.className = 'kpi-value ' + colorClass(sessionPnl);
+  document.getElementById('kpi-session-roi').textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(1)}% ROI`;
+  document.getElementById('kpi-wr').textContent = wr;
+  document.getElementById('kpi-wl').textContent = `${wins}W / ${losses}L`;
+  document.getElementById('kpi-open').textContent = open;
+  const tpEl = document.getElementById('kpi-today-pnl');
+  tpEl.textContent = fmt(todayPnl);
+  tpEl.className = 'kpi-value ' + colorClass(todayPnl);
+}
+
+function renderBars(history) {
+  const container = document.getElementById('pnl-bars');
+  const maxAbs = Math.max(...history.map(h => Math.abs(h.pnl)), 0.01);
+  container.innerHTML = history.map(h => {
+    const pct = Math.abs(h.pnl) / maxAbs * 100;
+    const cls = h.pnl >= 0 ? 'green' : 'red';
+    const tip = `${h.day}: ${fmt(h.pnl)}`;
+    return `<div class="bar-wrap">
+      <div class="bar ${cls}" style="height:${pct}%" data-tip="${tip}"></div>
+      <div class="bar-label">${h.day.slice(0,1)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCategories(cats) {
+  const maxAbs = Math.max(...cats.map(c => Math.abs(c.pnl)), 0.01);
+  document.getElementById('category-list').innerHTML = cats.map(c => {
+    const pct = Math.abs(c.pnl) / maxAbs * 100;
+    const color = c.pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    const wrStr = c.trades > 0 ? c.wr.toFixed(0) + '%' : '—';
+    return `<div class="category-row">
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${pct}%;background:${color}"></div></div>
+      <div class="cat-pnl" style="color:${color}">${fmt(c.pnl)}</div>
+      <div class="cat-wr">${wrStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderLeader(report) {
+  if (!report) return;
+  document.getElementById('leader-timestamp').textContent = 'Last report: ' + (report.timestamp ?? 'just now');
+  const suggestions = report.suggestions ?? [];
+  if (!suggestions.length) {
+    document.getElementById('leader-suggestions').innerHTML =
+      '<div class="suggestion"><div class="suggestion-text" style="color:var(--muted)">No suggestions yet.</div></div>';
+    return;
+  }
+  document.getElementById('leader-suggestions').innerHTML = suggestions.map((s, i) =>
+    `<div class="suggestion">
+      <div class="suggestion-num">${i + 1}</div>
+      <div class="suggestion-text">${s}</div>
+    </div>`
+  ).join('');
+}
+
+function statusClass(s) {
+  if (s === 'filled') return 'status-filled';
+  if (s === 'submitted') return 'status-submitted';
+  if (s === 'resolved' || s === 'won') return 'status-won';
+  if (s === 'lost') return 'status-lost';
+  return '';
+}
+
+function renderPositions(rows) {
+  document.getElementById('positions-count').textContent = `${rows.length} trades`;
+  if (!rows.length) return;
+  document.getElementById('positions-body').innerHTML = rows.map(r => {
+    const pnl = r.pnlUsd ?? null;
+    const pnlStr = pnl !== null ? `<span style="color:${pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(pnl)}</span>` : '—';
+    const statusLabel = r.outcomeCorrect === 1 ? 'won' : r.outcomeCorrect === 0 ? 'lost' : r.status;
+    return `<tr>
+      <td title="${r.ticker}">${(r.title || r.ticker || '').slice(0, 38)}</td>
+      <td style="text-transform:uppercase;color:${r.direction==='yes'?'var(--green)':'var(--accent)'}">
+        ${r.direction} ${r.limitPriceCents}¢
+      </td>
+      <td style="color:var(--muted)">${r.signalSource ?? '—'}</td>
+      <td>${(r.confidence ?? 0).toFixed(1)}</td>
+      <td>$${(r.costUsd ?? 0).toFixed(2)}</td>
+      <td>${pnlStr}</td>
+      <td><span class="status-pill ${statusClass(statusLabel)}">${statusLabel}</span></td>
+      <td style="color:var(--muted)">${(r.createdAt ?? '').slice(0, 16).replace('T',' ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- Initial render with demo/seed data ----
+renderKPIs({});
+renderBars(pnlHistory);
+renderCategories(categoryData);
+renderLeader(null);
+renderPositions(positions);
+
+// ---- Backend polling (wires to Krypt-Trader IPC when running inside Electron) ----
+// The Krypt-Trader Electron app exposes window.kryptApi = { invoke, on } for IPC.
+// If running standalone in a browser, we just leave the demo seed data visible.
+
+if (window.kryptApi) {
+  async function refresh() {
+    try {
+      const snap = await window.kryptApi.invoke('account');
+      renderKPIs({
+        balance: snap.totalUsd,
+        sessionPnl: snap.sessionPnlUsd,
+        roi: snap.sessionRoiPct,
+        wins: snap.wins,
+        losses: snap.losses,
+        open: snap.openCount + snap.pendingCount,
+        todayPnl: snap.todayPnlUsd,
+      });
+    } catch(e) {}
+
+    try {
+      const rows = await window.kryptApi.invoke('positions', { limit: 20 });
+      renderPositions(rows);
+
+      // Derive category breakdown from resolved positions
+      const catMap = {};
+      for (const r of rows.filter(p => p.resolved)) {
+        const cat = r.category || 'world';
+        if (!catMap[cat]) catMap[cat] = { pnl: 0, wins: 0, losses: 0, trades: 0 };
+        catMap[cat].pnl += r.pnlUsd ?? 0;
+        catMap[cat].trades++;
+        if (r.outcomeCorrect === 1) catMap[cat].wins++;
+        if (r.outcomeCorrect === 0) catMap[cat].losses++;
+      }
+      const cats = Object.entries(catMap).map(([name, d]) => ({
+        name, pnl: d.pnl,
+        wr: d.trades > 0 ? d.wins / d.trades * 100 : 0,
+        trades: d.trades,
+      })).sort((a,b) => b.pnl - a.pnl);
+      if (cats.length) renderCategories(cats);
+    } catch(e) {}
+
+    try {
+      const series = await window.kryptApi.invoke('pnlSeries', { sinceHours: 168 });
+      // Bucket by day
+      const days = {};
+      for (const pt of series) {
+        const d = (pt.at ?? '').slice(0, 10);
+        if (d) days[d] = (pt.realizedPnlUsd ?? 0);
+      }
+      const hist = Object.entries(days).slice(-7).map(([d, pnl]) => ({
+        day: new Date(d).toLocaleDateString('en-US',{weekday:'short'}),
+        pnl,
+      }));
+      if (hist.length) renderBars(hist);
+    } catch(e) {}
+
+    try {
+      const report = await window.kryptApi.invoke('swarmLeaderReport', {});
+      renderLeader(report);
+    } catch(e) {}
+  }
+
+  refresh();
+  setInterval(refresh, 30_000);
+
+  // Listen for push events too
+  window.kryptApi.on('account:update', snap => {
+    renderKPIs({
+      balance: snap.totalUsd,
+      sessionPnl: snap.sessionPnlUsd,
+      roi: snap.sessionRoiPct,
+      wins: snap.wins,
+      losses: snap.losses,
+      open: snap.openCount + snap.pendingCount,
+      todayPnl: snap.todayPnlUsd,
+    });
+  });
+  window.kryptApi.on('swarm:leaderReport', renderLeader);
+  window.kryptApi.on('swarm:emergencyStop', data => {
+    document.querySelector('.swarm-dot').style.background = '#d63031';
+    document.querySelector('.swarm-dot').style.boxShadow = '0 0 6px #d63031';
+    document.querySelector('.swarm-status').innerHTML =
+      '<div class="swarm-dot" style="background:#d63031;box-shadow:0 0 6px #d63031;animation:none"></div>' +
+      '<span style="color:#d63031">EMERGENCY STOP — ' + (data.reason ?? '').slice(0, 60) + '</span>';
+  });
+}
+</script>
+</body>
+</html>
