@@ -66,6 +66,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "start_bankroll_usd": 0.0,
     "stop_loss_on_day": -50.0,
     "take_profit_on_day": 0.0,
+    "min_balance_usd": 5.0,
+    "swarm_emergency_stop_pct": 0.0,
 
     "trading_hours_enabled": False,
     "trading_hours_start": "00:00",
@@ -388,6 +390,49 @@ STRATEGY_PRESETS: list[dict[str, Any]] = [
         },
     },
     {
+        "id": "swarm-demo-micro",
+        "name": "Swarm Demo Micro",
+        "tagline": "Start with $10: fixed $1 trades, crypto+sports only, 30% circuit breaker.",
+        "description": (
+            "Designed for a $10 demo bankroll. Fixed $1 per trade keeps every "
+            "position within Kalshi's minimum while risking at most 10% per bet. "
+            "Only the two net-positive categories trade: crypto whale signals and "
+            "sports contrarian momentum (confidence ≥ 70 / ≥ 60). "
+            "Daily stop-loss at -$2. The 30% drawdown circuit breaker (swarm_emergency_stop_pct) "
+            "cancels all open orders and disables trading automatically if balance "
+            "falls to $7 or below. SwarmLeader runs a daily analysis and logs "
+            "concrete improvement suggestions."
+        ),
+        "riskLabel": "safe",
+        "badge": "new",
+        "config": {
+            "kalshi_env": "demo",
+            "trade_whales": True,
+            "trade_momentum": True,
+            "contrarian_only": True,
+            "allowed_categories": None,
+            "allowed_whale_categories": ["crypto", "sports", "exotics"],
+            "allowed_momentum_categories": ["sports", "crypto"],
+            "allowed_momentum_signal_types": ["trade_cluster"],
+            "min_confidence_whale": 70.0,
+            "min_edge_pts_whale": 8.0,
+            "min_confidence_momentum": 60.0,
+            "min_edge_pts_momentum": 6.0,
+            "min_entry_price_cents": 15,
+            "max_entry_price_cents": 88,
+            "sizing_mode": "fixed",
+            "fixed_trade_usd": 1.0,
+            "hard_max_position_usd": 1.50,
+            "max_open_positions": 3,
+            "max_daily_new_positions": 5,
+            "max_total_exposure_fraction": 0.60,
+            "stop_loss_on_day": -2.0,
+            "take_profit_on_day": 3.0,
+            "min_balance_usd": 1.50,
+            "swarm_emergency_stop_pct": 30.0,
+        },
+    },
+    {
         "id": "krypt-convergence-elite",
         "name": "Convergence Elite",
         "tagline": "3+ whale consensus + Kelly sizing — ultra-high conviction only.",
@@ -540,6 +585,8 @@ def _validate_config(cfg: dict[str, Any]) -> dict[str, Any]:
     cfg["max_positions_per_event"] = _clampi(cfg.get("max_positions_per_event"), 1, 100_000, d["max_positions_per_event"])
     cfg["stop_loss_on_day"] = _clampf(cfg.get("stop_loss_on_day"), -1e9, 0.0, d["stop_loss_on_day"])
     cfg["take_profit_on_day"] = _clampf(cfg.get("take_profit_on_day"), 0.0, 1e9, d["take_profit_on_day"])
+    cfg["min_balance_usd"] = _clampf(cfg.get("min_balance_usd"), 0.0, 1e9, d.get("min_balance_usd", 5.0))
+    cfg["swarm_emergency_stop_pct"] = _clampf(cfg.get("swarm_emergency_stop_pct"), 0.0, 100.0, d.get("swarm_emergency_stop_pct", 0.0))
     cfg["gambling_mode"] = bool(cfg.get("gambling_mode", False))
     cfg["crypto15m_live"] = bool(cfg.get("crypto15m_live", False))
     cfg["crypto15m_order_size"] = _clampi(cfg.get("crypto15m_order_size"), 1, 10_000, d["crypto15m_order_size"])

@@ -465,8 +465,9 @@ async def scan_for_trades(cfg: dict) -> list[dict]:
 
     cents, _ = await refresh_balance(cfg)
     balance_usd = cents / 100.0
-    if balance_usd < 5.0:
-        _skip_log(f"balance ${balance_usd:.2f} too low")
+    min_bal = float(cfg.get("min_balance_usd", 5.0))
+    if balance_usd < min_bal:
+        _skip_log(f"balance ${balance_usd:.2f} below min ${min_bal:.2f}")
         return []
 
     candidates: list[tuple[dict, str]] = []
@@ -531,8 +532,9 @@ async def scan_for_trades(cfg: dict) -> list[dict]:
             logger.error(f"[exec-fail] {sig['ticker']} {src}: {e}", exc_info=True)
         cents, _ = await refresh_balance(cfg, force=True)
         balance_usd = cents / 100.0
-        if balance_usd < 5.0:
-            logger.info("[halt-cycle] balance now below $5")
+        min_bal = float(cfg.get("min_balance_usd", 5.0))
+        if balance_usd < min_bal:
+            logger.info(f"[halt-cycle] balance ${balance_usd:.2f} below min ${min_bal:.2f}")
             break
 
     if candidates:

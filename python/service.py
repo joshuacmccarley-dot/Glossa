@@ -86,6 +86,7 @@ import trader  # noqa: E402
 import crypto15m_trader  # noqa: E402
 import crypto15m_record  # noqa: E402
 import webhook  # noqa: E402
+import swarm as swarm_mod  # noqa: E402
 from config import DEFAULT_CONFIG, merge_with_defaults  # noqa: E402
 
 
@@ -117,7 +118,8 @@ class State:
 
 STATE = State()
 
-
+_swarm_aggregator: swarm_mod.SwarmAggregator = swarm_mod.SwarmAggregator(window_sec=120.0)
+_swarm_leader: swarm_mod.SwarmLeader = swarm_mod.SwarmLeader(emergency_stop_pct=30.0)
 
 
 _stdout_lock = asyncio.Lock()
@@ -380,6 +382,82 @@ def _signal_row_to_js(r: dict, source: str, traded: bool) -> dict:
 
 
 
+def _row_to_swarm_signal(row: dict, source: str) -> swarm_mod.SwarmSignal:
+    if source == "whale":
+        direction = (row.get("taker_side") or "yes").lower()
+        price = float(row.get("price") or 0.0)
+    else:
+        direction = (row.get("direction") or "yes").lower()
+        yes_frac = float(row.get("price") or 0.0)
+        price = yes_frac if direction == "yes" else max(0.0, 1.0 - yes_frac)
+    return swarm_mod.SwarmSignal(
+        ticker=row["ticker"],
+        event_ticker=row.get("event_ticker") or "",
+        direction=direction,
+        source=source,
+        confidence=float(row.get("confidence") or 0.0),
+        price=price,
+        category=row.get("category") or "",
+        title=row.get("title") or "",
+        signal_id=int(row.get("id") or 0),
+        raw=dict(row),
+    )
+
+
+async def _run_swarm_ensemble(cfg: dict) -> list[dict]:
+    """
+    Drain the SwarmAggregator, execute signals that are backed by 2+ independent
+    sources (ensemble confidence boost applied). Single-source signals are left
+    to the regular scan_for_trades call that follows.
+    """
+    if not cfg.get("enable_trading"):
+        return []
+    canonical = await _swarm_aggregator.drain()
+    ensemble = [s for s in canonical if "+" in s.source]
+    if not ensemble:
+        return []
+
+    env = kalshi_auth.get_env()
+    inserted: list[dict] = []
+    try:
+        cents, _ = await trader.refresh_balance(cfg)
+        balance_usd = cents / 100.0
+        min_bal = float(cfg.get("min_balance_usd", 5.0))
+        if balance_usd < min_bal:
+            return []
+    except Exception:
+        return []
+
+    for sig in ensemble:
+        enhanced = dict(sig.raw)
+        enhanced["confidence"] = sig.confidence
+        primary = sig.source.split("+")[0]
+        from trader import should_trade, execute_signal
+        ok, why = should_trade(enhanced, primary, cfg)
+        if not ok:
+            logger.debug(f"[swarm:ensemble] {sig.ticker} filtered: {why}")
+            continue
+        try:
+            row = await execute_signal(enhanced, primary, cfg, balance_usd)
+            if row:
+                inserted.append(row)
+                logger.info(
+                    f"[swarm:ensemble] {sig.ticker} {sig.direction} "
+                    f"sources={sig.source} conf={sig.confidence:.1f}"
+                )
+        except Exception as e:
+            logger.error(f"[swarm:ensemble-fail] {sig.ticker}: {e}", exc_info=True)
+        try:
+            cents, _ = await trader.refresh_balance(cfg, force=True)
+            balance_usd = cents / 100.0
+            min_bal = float(cfg.get("min_balance_usd", 5.0))
+            if balance_usd < min_bal:
+                break
+        except Exception:
+            break
+    return inserted
+
+
 _loop_task: asyncio.Task | None = None
 _loop_stop: asyncio.Event | None = None
 
@@ -409,6 +487,7 @@ async def _scanner_and_trader_loop() -> None:
     last_crypto15m_record = 0.0
     last_cleanup = 0.0
     last_stats_push = asyncio.get_event_loop().time()
+    last_swarm_leader = asyncio.get_event_loop().time()
 
     try:
         cnt = await scanner.sync_markets(max_pages=10)
@@ -449,6 +528,10 @@ async def _scanner_and_trader_loop() -> None:
                 for row in rows:
                     js = _signal_row_to_js(row, "whale", int(row["id"]) in seen)
                     await emit_event("signal:new", js)
+                    try:
+                        _swarm_aggregator.submit(_row_to_swarm_signal(row, "whale"))
+                    except Exception:
+                        pass
                     if cfg.get("enable_discord"):
                         try:
                             await webhook.send_whale(
@@ -473,6 +556,10 @@ async def _scanner_and_trader_loop() -> None:
                 for row in rows:
                     js = _signal_row_to_js(row, "momentum", int(row["id"]) in seen)
                     await emit_event("signal:new", js)
+                    try:
+                        _swarm_aggregator.submit(_row_to_swarm_signal(row, "momentum"))
+                    except Exception:
+                        pass
                     if cfg.get("enable_discord"):
                         try:
                             await webhook.send_momentum(
@@ -488,7 +575,10 @@ async def _scanner_and_trader_loop() -> None:
                 STATE.auth_ok
                 and now - last_trade >= float(cfg.get("trade_scan_interval", 20))
             ):
+                # Ensemble signals first (whale+momentum corroboration = confidence boost)
+                placed_ensemble = await _run_swarm_ensemble(cfg)
                 placed = await trader.scan_for_trades(cfg)
+                placed = placed_ensemble + placed
                 last_trade = now
                 STATE.last_trade_scan_at = datetime.now(timezone.utc).isoformat()
                 for row in placed:
@@ -637,10 +727,52 @@ async def _scanner_and_trader_loop() -> None:
                                 lifetime_wins=snap["wins"],
                                 lifetime_losses=snap["losses"],
                             )
+                    # SwarmLeader: set start balance once, then check emergency stop
+                    total_usd = snap["totalUsd"]
+                    _swarm_leader.set_start_balance(total_usd)
+                    est_pct = float(STATE.cfg.get("swarm_emergency_stop_pct", 0) or 0)
+                    if est_pct > 0:
+                        _swarm_leader._emergency_stop_pct = est_pct
+                        stop, reason = _swarm_leader.check_emergency_stop(total_usd)
+                        if stop:
+                            logger.warning(f"[swarm-leader] {reason}")
+                            try:
+                                await trader.cancel_all_open()
+                            except Exception:
+                                pass
+                            STATE.cfg = {**STATE.cfg, "enable_trading": False}
+                            await emit_event("swarm:emergencyStop", {
+                                "reason": reason,
+                                "balanceUsd": total_usd,
+                            })
                 await emit_event("account:update", snap)
                 last_account_emit = now
         except Exception as e:
             logger.debug(f"account snapshot error: {e}")
+
+        # SwarmLeader daily report
+        try:
+            if now - last_swarm_leader >= 86_400.0:
+                last_swarm_leader = now
+                env = kalshi_auth.get_env()
+                with db.get_db() as conn:
+                    stats = db.aggregate_stats(conn, env)
+                try:
+                    cents, port = await trader.refresh_balance(STATE.cfg, force=False)
+                    stats["total_balance"] = (cents + port) / 100.0
+                except Exception:
+                    pass
+                report = _swarm_leader.generate_report(stats, STATE.cfg)
+                await emit_event("swarm:leaderReport", report)
+                logger.info(
+                    f"[swarm-leader] Daily: win_rate={report['winRate']}% "
+                    f"pnl=${report['realizedPnlUsd']:.2f} "
+                    f"suggestions={len(report['suggestions'])}"
+                )
+                for s in report["suggestions"]:
+                    logger.info(f"[swarm-leader] → {s}")
+        except Exception as e:
+            logger.debug(f"swarm leader daily report failed: {e}")
 
         try:
             push_iv = float(cfg.get("stats_push_interval", 3600) or 3600)
@@ -1123,6 +1255,37 @@ async def _h_factoryReset(_p: dict) -> dict:
     return {"ok": True, "deleted": summary}
 
 
+async def _h_swarmLeaderReport(_p: dict) -> dict:
+    env = kalshi_auth.get_env()
+    with db.get_db() as conn:
+        stats = db.aggregate_stats(conn, env)
+    try:
+        cents, port = await trader.refresh_balance(STATE.cfg, force=False)
+        stats["total_balance"] = (cents + port) / 100.0
+    except Exception:
+        pass
+    return _swarm_leader.generate_report(stats, STATE.cfg)
+
+
+async def _h_swarmStatus(_p: dict) -> dict:
+    canonical = await _swarm_aggregator.drain()
+    return {
+        "pendingSignals": len(canonical),
+        "ensembleSignals": len([s for s in canonical if "+" in s.source]),
+        "startBalanceUsd": _swarm_leader._start_balance,
+        "emergencyStopPct": float(STATE.cfg.get("swarm_emergency_stop_pct", 0) or 0),
+        "signals": [
+            {
+                "ticker": s.ticker,
+                "direction": s.direction,
+                "source": s.source,
+                "confidence": round(s.confidence, 1),
+            }
+            for s in canonical
+        ],
+    }
+
+
 async def _h_crypto15m(_p: dict) -> dict:
     return await crypto15m.snapshot(STATE.cfg)
 
@@ -1142,6 +1305,8 @@ async def _h_kalshiMarketUrl(p: dict) -> dict:
 
 _HANDLERS = {
     "ping": _h_ping,
+    "swarmLeaderReport": _h_swarmLeaderReport,
+    "swarmStatus": _h_swarmStatus,
     "crypto15m": _h_crypto15m,
     "crypto15mStatus": _h_crypto15mStatus,
     "kalshiMarketUrl": _h_kalshiMarketUrl,

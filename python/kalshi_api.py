@@ -12,11 +12,11 @@ from kalshi_auth import sign_headers, get_env, sync_server_time
 
 logger = logging.getLogger(__name__)
 
-PUBLIC_BASE = "https://api.elections.kalshi.com/trade-api/v2"
+PUBLIC_BASE = "https://external-api.kalshi.com/trade-api/v2"
 
 _TRADE_BASES = {
     "demo": "https://demo-api.kalshi.co",
-    "production": "https://api.elections.kalshi.com",
+    "production": "https://external-api.kalshi.com",
 }
 
 PATH_PREFIX = "/trade-api/v2"

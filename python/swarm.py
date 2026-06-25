@@ -316,6 +316,147 @@ def monthly_pnl_estimate(
     }
 
 
+class SwarmLeader:
+    """
+    Daily performance analyst for the swarm. Two jobs:
+      1. Emergency stop — cancels all trades and kills trading when the session
+         balance drops more than `emergency_stop_pct` below the starting balance.
+      2. Daily report — every 24 h, analyses resolved trades and emits concrete
+         parameter suggestions (confidence gates, category filters, Kelly fraction).
+
+    Usage in service.py:
+        leader = SwarmLeader(emergency_stop_pct=30.0)
+        leader.set_start_balance(balance_usd)                  # call once at startup
+        stop, reason = leader.check_emergency_stop(balance_usd) # call every cycle
+        if leader.should_run_report():
+            report = leader.generate_report(stats, cfg)
+            await emit_event("swarm:leaderReport", report)
+    """
+
+    _REPORT_INTERVAL_SEC = 86_400.0  # 24 hours
+
+    def __init__(self, emergency_stop_pct: float = 30.0):
+        self._emergency_stop_pct = emergency_stop_pct
+        self._start_balance: float = 0.0
+        self._last_report_at: float = 0.0
+
+    def set_start_balance(self, balance_usd: float) -> None:
+        if self._start_balance == 0.0 and balance_usd > 0:
+            self._start_balance = balance_usd
+            logger.info(
+                f"[swarm-leader] start balance locked at ${balance_usd:.2f}"
+            )
+
+    def check_emergency_stop(self, balance_usd: float) -> tuple[bool, str]:
+        if self._start_balance <= 0 or self._emergency_stop_pct <= 0:
+            return False, ""
+        drawdown_pct = (self._start_balance - balance_usd) / self._start_balance * 100.0
+        if drawdown_pct >= self._emergency_stop_pct:
+            return True, (
+                f"SWARM EMERGENCY STOP: balance ${balance_usd:.2f} is "
+                f"{drawdown_pct:.1f}% below session start ${self._start_balance:.2f} "
+                f"(threshold: {self._emergency_stop_pct:.0f}%). "
+                f"All open orders cancelled. Re-enable trading manually after reviewing "
+                f"the Swarm Leader suggestions."
+            )
+        return False, ""
+
+    def should_run_report(self) -> bool:
+        now = time.time()
+        if now - self._last_report_at >= self._REPORT_INTERVAL_SEC:
+            self._last_report_at = now
+            return True
+        return False
+
+    def generate_report(self, stats: dict, cfg: dict) -> dict:
+        """
+        Analyse resolved-trade stats and return a dict with suggestions.
+
+        `stats` is the output of db.aggregate_stats() plus an optional
+        `"total_balance"` key for the current total portfolio value.
+        """
+        wins = int(stats.get("wins") or 0)
+        losses = int(stats.get("losses") or 0)
+        total = wins + losses
+        win_rate = (wins / total * 100.0) if total > 0 else 0.0
+        realized_pnl = float(stats.get("realized_pnl") or 0.0)
+        balance = float(stats.get("total_balance") or 0.0)
+        suggestions: list[str] = []
+
+        if total == 0:
+            suggestions.append(
+                "No trades have resolved yet. Confirm enable_trading is on and "
+                "that signal confidence gates are reachable (try lowering "
+                "min_confidence_whale / min_confidence_momentum by 5 pts)."
+            )
+        elif win_rate < 45:
+            new_whale = cfg.get("min_confidence_whale", 55) + 10
+            new_mom = cfg.get("min_confidence_momentum", 55) + 10
+            suggestions.append(
+                f"Win rate {win_rate:.1f}% is below breakeven. Raise confidence "
+                f"gates: min_confidence_whale → {new_whale:.0f}, "
+                f"min_confidence_momentum → {new_mom:.0f}. "
+                f"Also restrict categories to crypto + sports only."
+            )
+        elif win_rate < 60:
+            suggestions.append(
+                f"Win rate {win_rate:.1f}% is below target. "
+                f"Restrict allowed_whale_categories to ['crypto','exotics'] "
+                f"and allowed_momentum_categories to ['sports'] — "
+                f"these have the highest backtested edge."
+            )
+        elif win_rate >= 75:
+            new_kf = min(0.75, float(cfg.get("kelly_fraction", 0.5)) + 0.05)
+            suggestions.append(
+                f"Win rate {win_rate:.1f}% is strong. Consider increasing "
+                f"kelly_fraction from {cfg.get('kelly_fraction', 0.5):.2f} "
+                f"to {new_kf:.2f} for slightly larger positions."
+            )
+        else:
+            suggestions.append(
+                f"Win rate {win_rate:.1f}% is in healthy range. "
+                f"Keep current settings for another 24 h before tuning."
+            )
+
+        if realized_pnl < -2.0 and total >= 3:
+            suggestions.append(
+                f"Net P&L ${realized_pnl:.2f} is negative. "
+                f"Check that stop_loss_on_day is set to limit daily losses. "
+                f"Consider pausing until win-rate trend reverses."
+            )
+
+        if balance > 0 and cfg.get("hard_max_position_usd", 50) > balance * 0.25:
+            safe_max = round(balance * 0.10, 2)
+            suggestions.append(
+                f"hard_max_position_usd ${cfg.get('hard_max_position_usd', 50):.2f} "
+                f"exceeds 25 % of balance ${balance:.2f}. "
+                f"Reduce to ${safe_max:.2f} (10 %) to limit ruin risk."
+            )
+
+        open_filled = int(stats.get("open_filled") or 0)
+        pending = int(stats.get("pending") or 0)
+        open_total = open_filled + pending
+        max_open = int(cfg.get("max_open_positions", 25))
+        if open_total >= max_open:
+            suggestions.append(
+                f"All {max_open} position slots are occupied. "
+                f"Consider increasing max_open_positions or "
+                f"tightening gates so slots turn over faster."
+            )
+
+        return {
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "wins": wins,
+            "losses": losses,
+            "totalResolved": total,
+            "winRate": round(win_rate, 1),
+            "realizedPnlUsd": round(realized_pnl, 2),
+            "balanceUsd": round(balance, 2),
+            "openPositions": open_total,
+            "suggestions": suggestions,
+        }
+
+
 # Pre-computed scenarios matching the roadmap phases above.
 PROFITABILITY_SCENARIOS = [
     monthly_pnl_estimate(
