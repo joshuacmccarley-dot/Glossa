@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 PUBLIC_BASE = "https://external-api.kalshi.com/trade-api/v2"
 
 _TRADE_BASES = {
-    "demo": "https://demo-api.kalshi.co",
+    "demo": "https://external-api.demo.kalshi.co",
     "production": "https://external-api.kalshi.com",
 }
 

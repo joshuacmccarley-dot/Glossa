@@ -157,7 +157,7 @@ def _rsa_key_file(env: Optional[str] = None) -> Path:
 
 
 _SERVER_BASES = {
-    "demo": "https://demo-api.kalshi.co",
+    "demo": "https://external-api.demo.kalshi.co",
     "production": "https://external-api.kalshi.com",
 }
 
