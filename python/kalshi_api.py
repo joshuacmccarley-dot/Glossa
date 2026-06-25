@@ -425,7 +425,8 @@ async def get_orderbook(ticker: str) -> dict:
     return _normalize_orderbook(await _pub_get(f"{PUBLIC_BASE}/markets/{ticker}/orderbook"))
 
 
-ORDERS_V2_PATH = "/portfolio/events/orders"
+ORDERS_CREATE_PATH = "/portfolio/events/orders"   # POST only (v2 create)
+ORDERS_MGMT_PATH  = "/portfolio/orders"            # GET list / GET by id / DELETE
 
 
 def _v2_order_fields(side: str, action: str, price_cents: int) -> tuple[str, str]:
@@ -436,6 +437,23 @@ def _v2_order_fields(side: str, action: str, price_cents: int) -> tuple[str, str
         book_side = "ask" if action == "buy" else "bid"
         yes_cents = 100 - price_cents
     return book_side, f"{yes_cents / 100:.4f}"
+
+
+async def get_orders(
+    status: Optional[str] = None,
+    limit: int = 100,
+) -> list[dict]:
+    """List orders from GET /portfolio/orders."""
+    params: dict = {"limit": limit}
+    if status:
+        params["status"] = status
+    try:
+        data = await _signed_request("GET", ORDERS_MGMT_PATH, params=params)
+    except KalshiAPIError:
+        return []
+    if isinstance(data, dict):
+        return data.get("orders", []) or []
+    return data or []
 
 
 async def place_limit_order(
@@ -468,8 +486,8 @@ async def place_limit_order(
         "time_in_force": "good_till_canceled",
         "self_trade_prevention_type": "taker_at_cross",
     }
-    return await _signed_request("POST", ORDERS_V2_PATH, json=body)
+    return await _signed_request("POST", ORDERS_CREATE_PATH, json=body)
 
 
 async def cancel_order(order_id: str) -> dict:
-    return await _signed_request("DELETE", f"{ORDERS_V2_PATH}/{order_id}")
+    return await _signed_request("DELETE", f"{ORDERS_MGMT_PATH}/{order_id}")
