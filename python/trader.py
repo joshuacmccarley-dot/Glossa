@@ -50,12 +50,42 @@ async def refresh_balance(cfg: dict, force: bool = False) -> tuple[int, int]:
 
 
 
-def _compute_position_usd(balance_usd: float, edge_pts: float, cfg: dict) -> float:
+def _compute_kelly_fraction(win_prob: float, cost: float) -> float:
+    """
+    Full Kelly criterion: f* = (p·b − (1−p)) / b
+    where b = net profit per dollar risked = (1 − cost) / cost.
+    Returns 0 when the expected value is negative (don't bet).
+    Caller is expected to apply a Kelly multiplier (e.g. half-Kelly).
+    """
+    if cost <= 0.0 or cost >= 1.0 or win_prob <= 0.0:
+        return 0.0
+    net_odds = (1.0 - cost) / cost
+    kelly = (win_prob * net_odds - (1.0 - win_prob)) / net_odds
+    return max(0.0, kelly)
+
+
+def _compute_position_usd(
+    balance_usd: float,
+    edge_pts: float,
+    cfg: dict,
+    win_prob: float = 0.0,
+    cost: float = 0.0,
+) -> float:
     if cfg.get("sizing_mode") == "fixed":
         return min(
             float(cfg.get("fixed_trade_usd", 5.0) or 0.0),
             float(cfg["hard_max_position_usd"]),
         )
+
+    if cfg.get("sizing_mode") == "kelly" and win_prob > 0.0 and 0.0 < cost < 1.0:
+        kelly = _compute_kelly_fraction(win_prob, cost)
+        min_kelly = float(cfg.get("min_kelly_fraction", 0.0))
+        if kelly < min_kelly:
+            return 0.0  # edge too thin for Kelly threshold — skip trade
+        multiplier = float(cfg.get("kelly_fraction", 0.5))  # default: half-Kelly
+        frac = kelly * multiplier
+        return min(balance_usd * frac, float(cfg["hard_max_position_usd"]))
+
     lo_e = float(cfg["sizing_base_edge"])
     hi_e = float(cfg["sizing_max_edge"])
     lo_f = float(cfg["min_size_fraction"])
@@ -278,6 +308,8 @@ async def execute_signal(
 ) -> dict | None:
     direction, signal_cost_cents = _signal_cost_cents(signal, source)
     edge_pts = _compute_edge(signal, source)
+    win_prob = float(signal.get("confidence") or 0.0) / 100.0
+    cost_frac = signal_cost_cents / 100.0
     env = get_env()
 
     with db.get_db() as conn:
@@ -309,7 +341,7 @@ async def execute_signal(
             return None
         exposure = db.current_total_exposure_usd(conn, env)
 
-    target_usd = _compute_position_usd(balance_usd, edge_pts, cfg)
+    target_usd = _compute_position_usd(balance_usd, edge_pts, cfg, win_prob=win_prob, cost=cost_frac)
     max_exposure = balance_usd * float(cfg["max_total_exposure_fraction"])
     target_usd = min(target_usd, max(0.0, max_exposure - exposure))
     reserve = balance_usd * float(cfg["min_cash_reserve_fraction"])

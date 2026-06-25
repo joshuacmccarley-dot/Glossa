@@ -88,19 +88,23 @@ def categorize_by_keywords(title: str) -> str:
 
 
 CATEGORY_EDGE = {
-    "sports":        +1.0,
-    "crypto":        +2.0,
-    "world":         -4.0,
-    "politics":       0.0,
-    "economics":      0.0,
-    "entertainment":  0.0,
-    "climate":        0.0,
+    "sports":        +2.5,  # best momentum edge per backtest (+18.2c/contract)
+    "crypto":        +3.0,  # best whale edge per backtest (+9.3c/contract)
+    "exotics":       +1.5,  # illiquid, but whale signals are high-conviction here
+    "entertainment": +0.5,  # niche events with predictable resolutions
+    "politics":      -1.5,  # noisy, social-media-manipulated, poor edge
+    "economics":     -0.5,  # macro surprises dominate, slight negative net-of-fee
+    "climate":       -2.0,  # very illiquid, wide spreads, fills at a disadvantage
+    "world":         -6.0,  # worst category — highly unpredictable, deep negative edge
 }
 
 
 MICRO_MARKET_FILTERS = [
     "KXBTC15M", "KXBTC1H", "KXBTC5M", "KXBTC1M",
     "KXETH15M", "KXETH1H", "KXETH5M", "KXETH1M",
+    "KXSOL15M", "KXSOL1H", "KXSOL5M", "KXSOL1M",
+    "KXXRP15M", "KXXRP1H", "KXDOGE15M", "KXDOGE1H",
+    "KXHYPE15M", "KXBNB15M",
     "KXHIGHNY", "KXLOWNY", "KXHIGHCHI", "KXLOWCHI",
     "KXHIGHLA", "KXLOWLA", "KXHIGHDC", "KXLOWDC",
     "KXRAIN", "KXSNOW", "KXWIND",

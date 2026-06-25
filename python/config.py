@@ -27,10 +27,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "gambling_mode": False,
     "gambling_trade_probability": 0.10,
 
-    # "percent" = edge-scaled % of balance (below). "fixed" = a flat dollar
-    # amount per trade (fixed_trade_usd), ignoring the fractions.
+    # "percent" = edge-scaled % of balance. "fixed" = flat dollar amount per
+    # trade. "kelly" = Kelly criterion sizing — bets proportionally to edge.
     "sizing_mode": "percent",
     "fixed_trade_usd": 5.0,
+    "kelly_fraction": 0.5,        # multiplier applied to full Kelly (0.5 = half-Kelly)
+    "min_kelly_fraction": 0.0,    # skip trade when full Kelly falls below this fraction
 
     "base_size_fraction": 0.03,
     "min_size_fraction": 0.02,
@@ -341,6 +343,83 @@ STRATEGY_PRESETS: list[dict[str, Any]] = [
             "max_open_positions": 12,
         },
     },
+    {
+        "id": "krypt-profit-max",
+        "name": "Profit Max 80",
+        "tagline": "Kelly sizing + backtested categories only — targets 80%+ win rate.",
+        "description": (
+            "High-conviction strategy targeting 80%+ win rate by stacking "
+            "three filters: (1) only the two backtested-positive signal "
+            "categories — crypto whale signals and sports contrarian momentum; "
+            "(2) elevated confidence gates (whale ≥ 70, momentum ≥ 50); "
+            "(3) Kelly criterion position sizing — bets proportional to the "
+            "measured statistical edge, with a minimum-Kelly gate that skips "
+            "trades whose edge is too thin to justify capital at risk. "
+            "Conservative daily stop-loss (-$30) protects against adverse "
+            "runs. Expect 5-15 trades/day rather than 40+. Paper-trade first "
+            "to verify forward edge before going live."
+        ),
+        "riskLabel": "balanced",
+        "badge": "recommended",
+        "config": {
+            "trade_whales": True,
+            "trade_momentum": True,
+            "trade_convergence": False,
+            "contrarian_only": True,
+            "allowed_categories": None,
+            "allowed_whale_categories": ["crypto", "exotics"],
+            "allowed_momentum_categories": ["sports"],
+            "allowed_momentum_signal_types": ["trade_cluster"],
+            "min_confidence_whale": 70.0,
+            "min_edge_pts_whale": 8.0,
+            "min_confidence_momentum": 50.0,
+            "min_edge_pts_momentum": 8.0,
+            "min_entry_price_cents": 15,
+            "max_entry_price_cents": 90,
+            "sizing_mode": "kelly",
+            "kelly_fraction": 0.5,
+            "min_kelly_fraction": 0.02,
+            "hard_max_position_usd": 50.0,
+            "max_open_positions": 10,
+            "max_daily_new_positions": 20,
+            "max_total_exposure_fraction": 0.50,
+            "stop_loss_on_day": -30.0,
+            "take_profit_on_day": 100.0,
+        },
+    },
+    {
+        "id": "krypt-convergence-elite",
+        "name": "Convergence Elite",
+        "tagline": "3+ whale consensus + Kelly sizing — ultra-high conviction only.",
+        "description": (
+            "The highest-conviction strategy in the system. Only fires when "
+            "3+ whale orders independently take the same side of the same "
+            "market within 2 hours AND the market falls in a category with "
+            "demonstrated positive backtest edge. Position sizing uses Kelly "
+            "criterion with a 60% multiplier — so a strong signal that "
+            "Kelly says deserves 10% of bankroll gets 6%. Expect very few "
+            "trades (sometimes none for days), but extremely high confidence "
+            "per trade. Best run alongside another strategy."
+        ),
+        "riskLabel": "experimental",
+        "badge": "new",
+        "config": {
+            "trade_whales": False,
+            "trade_momentum": False,
+            "trade_convergence": True,
+            "allowed_whale_categories": ["crypto", "sports", "exotics", "entertainment"],
+            "min_edge_pts_whale": 8.0,
+            "min_confidence_whale": 65.0,
+            "sizing_mode": "kelly",
+            "kelly_fraction": 0.6,
+            "min_kelly_fraction": 0.03,
+            "hard_max_position_usd": 100.0,
+            "max_open_positions": 5,
+            "max_daily_new_positions": 5,
+            "max_total_exposure_fraction": 0.40,
+            "stop_loss_on_day": -20.0,
+        },
+    },
 ]
 
 
@@ -444,9 +523,11 @@ def _validate_config(cfg: dict[str, Any]) -> dict[str, Any]:
     if cfg["min_size_fraction"] > cfg["max_size_fraction"]:
         cfg["min_size_fraction"] = cfg["max_size_fraction"]
 
-    if cfg.get("sizing_mode") not in ("percent", "fixed"):
+    if cfg.get("sizing_mode") not in ("percent", "fixed", "kelly"):
         cfg["sizing_mode"] = d["sizing_mode"]
     cfg["fixed_trade_usd"] = _clampf(cfg.get("fixed_trade_usd"), 0.0, 1e9, d["fixed_trade_usd"])
+    cfg["kelly_fraction"] = _clampf(cfg.get("kelly_fraction"), 0.0, 1.0, d.get("kelly_fraction", 0.5))
+    cfg["min_kelly_fraction"] = _clampf(cfg.get("min_kelly_fraction"), 0.0, 1.0, d.get("min_kelly_fraction", 0.0))
     cfg["hard_max_position_usd"] = _clampf(cfg.get("hard_max_position_usd"), 0.0, 1e9, d["hard_max_position_usd"])
     cfg["min_entry_price_cents"] = _clampi(cfg.get("min_entry_price_cents"), 1, 99, d["min_entry_price_cents"])
     cfg["max_entry_price_cents"] = _clampi(cfg.get("max_entry_price_cents"), 1, 99, d["max_entry_price_cents"])

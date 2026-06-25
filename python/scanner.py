@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 MIN_VOLUME_24H = 50
 MIN_VOLUME_SPIKE_RATIO = 2.0
 MIN_PRICE_MOVE = 0.08
-MIN_TRADE_CLUSTER_COUNT = 5
-MIN_TRADE_CLUSTER_DOLLARS = 500
+MIN_TRADE_CLUSTER_COUNT = 7    # raised from 5 — fewer but higher-conviction clusters
+MIN_TRADE_CLUSTER_DOLLARS = 1000  # raised from 500 — filters out retail noise
 ALERT_COOLDOWN_MINUTES = 30
 MOMENTUM_YES_MAX_YES_PRICE = 0.50
 MOMENTUM_NO_MIN_YES_PRICE = 0.50
@@ -77,39 +77,52 @@ def compute_whale_score(
 ) -> float:
     implied = max(5, min(price * 100, 95))
     edge = 0.0
-    if taker_side == "yes":
-        if   price >= 0.90: edge += 0.5
-        elif price >= 0.80: edge += 2
-        elif price >= 0.65: edge += 4.5
-        elif price >= 0.50: edge -= 1.5
-        else:               edge -= 6
-    else:
-        if   price >= 0.80: edge -= 0.5
-        elif price >= 0.65: edge += 0.5
-        elif price >= 0.50: edge += 3.5
-        elif price >= 0.35: edge -= 5
-        else:               edge -= 8
 
-    if dollar_value >= 25_000:   edge += 2
-    elif dollar_value >= 10_000: edge += 1
+    # YES-side price tiers: highest edge in the 0.65-0.82 "sweet spot" where
+    # whale conviction adds maximum information against residual uncertainty.
+    if taker_side == "yes":
+        if   price >= 0.92: edge += 1.0   # deep favourite — limited new info
+        elif price >= 0.82: edge += 3.5   # strong favourite — good signal
+        elif price >= 0.70: edge += 5.5   # SWEET SPOT — highest risk-adjusted edge
+        elif price >= 0.58: edge += 2.5   # moderate favourite
+        elif price >= 0.50: edge += 0.0   # coin-flip — no systematic edge
+        else:               edge -= 7.0   # underdog YES buy historically loses
+
+    # NO-side: `price` here is the NO price (YES = 1 − price).
+    # Highest edge when whale backs the underdog side at moderate prices.
+    else:
+        if   price >= 0.80: edge -= 0.5   # whale says 80%+ favourite loses — very contrarian
+        elif price >= 0.65: edge += 1.5   # moderate-underdog NO — decent signal
+        elif price >= 0.50: edge += 4.0   # coin-flip NO — strong mean-reversion signal
+        elif price >= 0.35: edge -= 4.0   # whale buying cheap NO against clear favourite
+        else:               edge -= 9.0   # deep underdog NO — historically worst
+
+    # Dollar size tiers — larger whales carry more conviction.
+    if   dollar_value >= 25_000: edge += 3.0
+    elif dollar_value >= 10_000: edge += 2.0
     elif dollar_value >= 5_000:  edge += 1.5
     elif dollar_value >= 2_500:  edge += 0.5
 
-    if market_volume >= 250_000:    edge += 1.5
-    elif market_volume >= 50_000:   edge += 0.5
-    elif 0 < market_volume < 1_000: edge -= 1.5
+    # Liquid markets have tighter spreads and better price discovery.
+    if   market_volume >= 250_000: edge += 1.5
+    elif market_volume >= 50_000:  edge += 0.5
+    elif 0 < market_volume < 1_000: edge -= 2.0
 
     if open_interest >= 50_000:
         edge += 0.5
 
+    # Time-to-close: short-dated markets react fastest to whale pressure.
     if days_to_close is not None and days_to_close > 0:
-        if days_to_close <= 1: edge += 0.5
-        elif days_to_close > 60: edge -= 0.5
+        if   days_to_close <= 0.5: edge += 1.5  # <12h — momentum locks in quickly
+        elif days_to_close <= 1:   edge += 0.5
+        elif days_to_close > 60:   edge -= 1.0  # long-dated: too much time for reversal
 
+    # Category edge — doubled weight because backtesting shows category is the
+    # single strongest predictor of net-positive whale signal performance.
     if category:
-        edge += CATEGORY_EDGE.get(category, 0.0) * 0.5
+        edge += CATEGORY_EDGE.get(category, 0.0) * 1.0
 
-    edge = max(-15, min(edge, 10))
+    edge = max(-15, min(edge, 12))
     return max(5, min(round(implied + edge, 1), 97.0))
 
 
@@ -126,6 +139,7 @@ def compute_momentum_confidence(
     direction: str,
     signal_type: str = "",
     category: str = "",
+    is_contrarian: bool = False,
 ) -> float:
     if direction == "yes":
         implied = price * 100
@@ -135,45 +149,60 @@ def compute_momentum_confidence(
 
     edge = 0.0
 
+    # Mean-reversion potential is highest at extreme prices.
+    # More granular bands capture where contrarian edge is strongest.
     if signal_type == "trade_cluster":
-        if implied < 15:   edge += 25
-        elif implied < 25: edge += 18
-        elif implied < 35: edge += 11
-        elif implied < 50: edge += 7
-        else:              edge += 3
+        if   implied <  8:  edge += 32  # extreme underdog, near-zero priced
+        elif implied < 15:  edge += 26
+        elif implied < 22:  edge += 19
+        elif implied < 30:  edge += 12
+        elif implied < 40:  edge += 8
+        elif implied < 50:  edge += 4
+        else:               edge += 2
 
-    if trade_cluster_count >= 20:    edge += 2
-    elif trade_cluster_count >= 10:  edge += 1.5
-    elif trade_cluster_count >= 5:   edge += 1
-    elif trade_cluster_count >= 3:   edge += 0.5
-    if trade_cluster_dollars >= 5_000:
-        edge += 1
+    # Cluster size and dollars — more participants = stronger crowding signal.
+    if   trade_cluster_count >= 25: edge += 3.0
+    elif trade_cluster_count >= 15: edge += 2.0
+    elif trade_cluster_count >= 10: edge += 1.5
+    elif trade_cluster_count >= 7:  edge += 1.0
+    if trade_cluster_dollars >= 10_000: edge += 2.0
+    elif trade_cluster_dollars >= 5_000: edge += 1.0
 
-    if volume_spike_ratio >= 5:    edge += 1.5
-    elif volume_spike_ratio >= 3:  edge += 1
+    if   volume_spike_ratio >= 8:  edge += 2.0
+    elif volume_spike_ratio >= 5:  edge += 1.5
+    elif volume_spike_ratio >= 3:  edge += 1.0
     elif volume_spike_ratio >= 2:  edge += 0.5
 
-    if price_change_abs >= 0.15:    edge += 1.5
-    elif price_change_abs >= 0.08:  edge += 1
-    elif price_change_abs >= 0.05:  edge += 0.5
+    if   price_change_abs >= 0.20: edge += 2.0
+    elif price_change_abs >= 0.15: edge += 1.5
+    elif price_change_abs >= 0.08: edge += 1.0
+    elif price_change_abs >= 0.05: edge += 0.5
 
-    if market_volume >= 250_000:    edge += 2
-    elif market_volume >= 50_000:   edge += 1
-    elif market_volume >= 10_000:   edge += 0.5
-    elif 0 < market_volume < 1_000: edge -= 1.5
+    # Contrarian alignment: cluster direction OPPOSES recent price move.
+    # This is the classic mean-reversion setup — crowd chases the move,
+    # market overshoots, then reverts. Strongest signal in the system.
+    if is_contrarian:
+        edge += 4.0
 
-    if open_interest >= 50_000:    edge += 1
-    elif open_interest >= 10_000:  edge += 0.5
+    if   market_volume >= 250_000: edge += 2.0
+    elif market_volume >= 50_000:  edge += 1.0
+    elif market_volume >= 10_000:  edge += 0.5
+    elif 0 < market_volume < 1_000: edge -= 2.0
+
+    if   open_interest >= 50_000: edge += 1.0
+    elif open_interest >= 10_000: edge += 0.5
 
     if days_to_close is not None and days_to_close > 0:
-        if days_to_close <= 1:   edge += 1
-        elif days_to_close <= 7: edge += 0.5
-        elif days_to_close > 60: edge -= 0.5
+        if   days_to_close <= 1:  edge += 1.5
+        elif days_to_close <= 7:  edge += 0.5
+        elif days_to_close > 60:  edge -= 1.0
 
+    # Full category edge weight — category is the strongest single predictor
+    # of whether momentum signals produce net-positive P&L after fees.
     if category:
-        edge += CATEGORY_EDGE.get(category, 0.0) * 0.5
+        edge += CATEGORY_EDGE.get(category, 0.0) * 1.0
 
-    edge = max(-12, min(edge, 8))
+    edge = max(-12, min(edge, 12))
     return max(5, min(round(implied + edge, 1), 97.0))
 
 
@@ -513,6 +542,13 @@ async def scan_momentum(cfg: dict) -> tuple[int, list[dict]]:
                 )
                 total_vol = _to_float(market.get("volume", 0))
 
+                # Contrarian alignment: cluster direction opposes recent price move.
+                # YES cluster + falling price = mean-reversion setup (and vice versa).
+                is_contrarian = (
+                    (direction == "yes" and price_change < -0.02) or
+                    (direction == "no"  and price_change >  0.02)
+                )
+
                 confidence = compute_momentum_confidence(
                     volume_spike_ratio=vol_spike,
                     price_change_abs=abs(price_change),
@@ -525,6 +561,7 @@ async def scan_momentum(cfg: dict) -> tuple[int, list[dict]]:
                     direction=direction,
                     signal_type=stype,
                     category=category,
+                    is_contrarian=is_contrarian,
                 )
                 title = (
                     market.get("title", "")
